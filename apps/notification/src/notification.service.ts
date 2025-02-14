@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class NotificationService {
-  getHello(): string {
-    return 'Hello World!';
+  
+  getHello(data: any): any {
+    console.log('Notification Service received:', data);
+    return 'Hello, RabbitMQ! is working';
   }
 }

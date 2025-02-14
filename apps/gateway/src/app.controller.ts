@@ -1,12 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Post,Inject, Body } from '@nestjs/common';
 import { AppService } from './app.service';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(@Inject('RABBITMQ_SERVICE') private client: ClientProxy) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Post('/notification')
+  getHello(@Body() data: any): any {
+    return this.client.send({ cmd: 'notification_created' }, data);
   }
 }
