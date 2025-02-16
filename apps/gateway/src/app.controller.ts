@@ -1,4 +1,4 @@
-import { Controller, Post,Inject, Body } from '@nestjs/common';
+import { Controller, Post, Inject, Body, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ClientProxy } from '@nestjs/microservices';
 
@@ -8,6 +8,15 @@ export class AppController {
 
   @Post('/notification')
   getHello(@Body() data: any): any {
-    return this.client.send({ cmd: 'notification_created' }, data);
+    // this.client.send({ cmd: 'notification_created' }, data);
+    this.client.emit('notification_created', data);
+    return 'Notification sent to the queue'; 
+    // console.log('Notification Service received:', data);
+  }
+
+  @Get('/notification')
+  getHelloNotifications(): any {
+    this.client.send({ cmd: 'notification_created' }, {});
+    console.log('Notification Service received:');
   }
 }

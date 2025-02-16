@@ -8,8 +8,8 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: ['amqp://localhost:5672'],
-      queue: 'notification_queue',
+      urls: ['amqp://localhost:5672'], // this is the RabbitMQ URL we are connecting to
+      queue: 'notification_queue', //the queue name should be the same as the one in the gateway microservice, that is the one we will be listening to
       queueOptions: {
         durable: false, // Set to true for production
       },
