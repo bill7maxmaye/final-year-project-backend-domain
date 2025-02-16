@@ -13,7 +13,7 @@ export class NotificationController {
   }
 
 
-  @MessagePattern({ cmd: 'notification_created' })
+  @MessagePattern({ cmd: 'notification_createdd' })
   getNotifications(): any {
     return this.notificationService.getNotification();
   }

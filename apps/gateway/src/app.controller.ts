@@ -16,7 +16,14 @@ export class AppController {
 
   @Get('/notification')
   getHelloNotifications(): any {
-    this.client.send({ cmd: 'notification_created' }, {});
-    console.log('Notification Service received:');
+    const response = this.client.send({ cmd: 'notification_createdd' }, {});
+    console.log(response);
+    return response;
+  }
+
+  @Post('/profile')
+  getProfile(data: any): any {
+    this.client.emit('profile_requested', data);
+    return { success: true };
   }
 }

@@ -10,6 +10,7 @@ export class NotificationService {
 
   getNotification(): any {
     console.log('Notification Service received:  GET GET GET REQUEST');
-    return 'Hello, RabbitMQ! is working WITH GET GET GET';
+    const data ='Hello, RabbitMQ! is working WITH GET GET GET';
+    return data;
   }
 }
