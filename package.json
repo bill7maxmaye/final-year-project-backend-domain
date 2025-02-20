@@ -10,8 +10,8 @@
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:all": "pnpm run start:dev --parallel",
     "start:dev:all": "pnpm run start:dev:gateway & pnpm run start:dev:authentication & pnpm run start:dev:notification & pnpm run start:dev:profile & pnpm run start:dev:social & pnpm run start:dev:chat",
-    "start:dev": "nest start --watch",
     "start:dev:gateway": "nest start --watch --project gateway",
     "start:dev:notification": "nest start --watch --project notification",
     "start:debug": "nest start --debug --watch",
@@ -25,11 +25,14 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
     "@nestjs/microservices": "^11.0.8",
+    "@nestjs/mongoose": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "amqp-connection-manager": "^4.1.14",
     "amqplib": "^0.10.5",
+    "mongoose": "^8.10.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -81,6 +84,7 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
+      "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
       "^@app/rabbitmq(|/.*)$": "<rootDir>/libs/rabbitmq/src/$1"
     },
     "workspaces": [
