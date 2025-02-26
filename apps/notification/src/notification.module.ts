@@ -4,7 +4,10 @@ import { NotificationService } from './notification.service';
 import { RabbitMQModule } from '@app/rabbitmq';
 
 @Module({
-  imports: [RabbitMQModule.register('notification_queue')],
+  imports: [
+    RabbitMQModule.register('notification_queue'),
+    RabbitMQModule.register('profile_queue'),
+  ],
   controllers: [NotificationController],
   providers: [NotificationService],
 })

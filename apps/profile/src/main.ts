@@ -16,6 +16,17 @@ async function bootstrap() {
     },
   });
 
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: ['amqp://localhost:5672'],
+      queue: 'notification_queue',
+      queueOptions: {
+        durable: false,
+      },
+    },
+  });
+
   await app.startAllMicroservices();
   await app.listen(process.env.port ?? 3004);
   console.log('🚀 Profile Microservice is running on http://localhost:3000');

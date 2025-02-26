@@ -4,7 +4,10 @@ import { ProfileService } from './profile.service';
 import { RabbitMQModule } from '@app/rabbitmq';
 
 @Module({
-  imports: [RabbitMQModule.register('profile_queue')],
+  imports: [
+    RabbitMQModule.register('profile_queue'),
+    RabbitMQModule.register('notification_queue'),
+  ],
   controllers: [ProfileController],
   providers: [ProfileService],
 })

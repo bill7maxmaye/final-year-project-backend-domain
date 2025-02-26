@@ -15,7 +15,7 @@ export class RabbitMQModule {
               urls: ['amqp://guest:guest@localhost:5672'], // RabbitMQ connection URL
               queue,
               queueOptions: {
-                durable: false, // Set to true in production
+                durable: false, 
               },
             },
           },
