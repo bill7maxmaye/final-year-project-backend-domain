@@ -9,12 +9,8 @@ export abstract class BaseRepository<TDocument extends BaseDocument> {
     this.logger = new Logger(model.modelName);
   }
 
-  async create(document: Omit<TDocument, '_id'>): Promise<TDocument> {
-    const createdDocument = new this.model({
-      ...document,
-      _id: new Types.ObjectId(),
-    });
-
+  async create(document: Partial<TDocument>): Promise<TDocument> {
+    const createdDocument = new this.model(document);
     const savedDocument = await createdDocument.save();
     return savedDocument.toJSON() as unknown as TDocument;
   }

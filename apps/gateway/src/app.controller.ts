@@ -1,12 +1,14 @@
-import { Controller, Post, Inject, Body, Get } from '@nestjs/common';
+import { Controller, Post, Inject, Body, Get, Param, Patch, Delete } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ClientProxy } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import { CreateUserDto } from './dtos/userDto';
 @Controller()
 export class AppController {
   constructor(
     private configService: ConfigService,
     @Inject('RABBITMQ_SERVICE') private client: ClientProxy,
+    private readonly reservationsService: AppService,
   ) {}
 
   @Post('/notification')
@@ -40,5 +42,26 @@ export class AppController {
     const port = this.configService.get<number>('PORT');
     console.log('PORT:', port); // Debugging
     return { port }; // Return as JSON response
+  }
+
+  //below here are endpoints to test if user is created
+  @Post('/createUser')
+  create(@Body() CreateUserDto: CreateUserDto) {
+    return this.reservationsService.createUser(CreateUserDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.reservationsService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.reservationsService.findOne(id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.reservationsService.remove(id);
   }
 }

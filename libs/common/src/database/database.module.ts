@@ -1,15 +1,25 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ModelDefinition, MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '../config';
-
 @Module({
   imports: [
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get('MONGODB_URI'),
-      }),
+      useFactory: (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGODB_URI');
+        if (!uri) {
+          throw new Error(
+            'MONGODB_URI is not set in the environment variables',
+          );
+        }
+        Logger.log(`Connecting to MongoDB: ${uri}`, 'DatabaseModule');
+        return {
+          uri,
+          connectTimeoutMS: 30000, 
+          socketTimeoutMS: 30000,
+        };
+      },
       inject: [ConfigService],
     }),
   ],
