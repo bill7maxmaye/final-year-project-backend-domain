@@ -1,8 +1,8 @@
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Logger } from '@nestjs/common';
-import { UserDocument } from '../entities/user.entity';
 import { BaseRepository } from '@app/common/baseRepository/base-repository';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { UserDocument } from 'apps/authentication/src/entities/user.entity';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class UserRepository extends BaseRepository<UserDocument> {

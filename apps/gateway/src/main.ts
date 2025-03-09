@@ -1,22 +1,22 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
 
     // Connect Microservice
-    app.connectMicroservice<MicroserviceOptions>({
-      transport: Transport.RMQ,
-      options: {
-        urls: ['amqp://localhost:5672'],
-        queue: 'notification_queue',
-        queueOptions: {
-          durable: false, // Set to true for production
-        },
-      },
-    });
+    // app.connectMicroservice<MicroserviceOptions>({
+    //   transport: Transport.RMQ,
+    //   options: {
+    //     urls: ['amqp://localhost:5672'],
+    //     queue: 'notification_queue',
+    //     queueOptions: {
+    //       durable: false, // Set to true for production
+    //     },
+    //   },
+    // });
 
     // Connect to the profile microservice
     app.connectMicroservice<MicroserviceOptions>({
@@ -29,6 +29,17 @@ async function bootstrap() {
         },
       },
     });
+
+    // app.connectMicroservice<MicroserviceOptions>({
+    //   transport: Transport.RMQ,
+    //   options: {
+    //     urls: ['amqp://localhost:5672'],
+    //     queue: 'authentication_queue',
+    //     queueOptions: {
+    //       durable: false, // Set to true for production
+    //     },
+    //   },
+    // });
 
     await app.startAllMicroservices();
     await app.listen(3000);

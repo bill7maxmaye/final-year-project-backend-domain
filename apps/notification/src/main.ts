@@ -16,7 +16,7 @@ async function bootstrap() {
     },
   });
 
-    app.connectMicroservice<MicroserviceOptions>({
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
       urls: ['amqp://localhost:5672'], 

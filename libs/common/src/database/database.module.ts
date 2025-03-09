@@ -16,8 +16,8 @@ import { ConfigModule } from '../config';
         Logger.log(`Connecting to MongoDB: ${uri}`, 'DatabaseModule');
         return {
           uri,
-          connectTimeoutMS: 30000, 
-          socketTimeoutMS: 30000,
+          connectTimeoutMS: 3000000, 
+          socketTimeoutMS: 3000000,
         };
       },
       inject: [ConfigService],

@@ -1,8 +1,11 @@
-import { Controller, Post, Inject, Body, Get, Param, Patch, Delete } from '@nestjs/common';
-import { AppService } from './app.service';
-import { ClientProxy } from '@nestjs/microservices';
+import { Body, Controller, Get, Inject, Post } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CreateUserDto } from './dtos/userDto';
+import { ClientProxy } from '@nestjs/microservices';
+import { CreateUserDto } from '../../authentication/src/dtos/userDto';
+import { AppService } from './app.service';
+import { SanitizedUserRto, UserRto } from '@app/common';
+import { lastValueFrom } from 'rxjs';
+import { LoginUserDto } from 'apps/authentication/src/dtos/login-user.dto';
 @Controller()
 export class AppController {
   constructor(
@@ -45,23 +48,40 @@ export class AppController {
   }
 
   //below here are endpoints to test if user is created
-  @Post('/createUser')
-  create(@Body() CreateUserDto: CreateUserDto) {
-    return this.reservationsService.createUser(CreateUserDto);
+  @Post('/register')
+  async registerUser(
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<SanitizedUserRto> {
+    console.log('📤 Sending request to Auth Microservice:', createUserDto);
+    // const response = await this.client.send({ cmd: 'register_user' }, createUserDto);
+    const response = await lastValueFrom(
+      this.client.send<UserRto>({ cmd: 'register_user' }, createUserDto),
+    );
+    return new SanitizedUserRto(response);
   }
 
-  @Get()
-  findAll() {
-    return this.reservationsService.findAll();
+  @Post('/login')
+  async login(@Body() createUserDto: LoginUserDto): Promise<SanitizedUserRto> {
+    console.log('📤 Sending request to Auth Microservice:', createUserDto);
+    // const response = await this.client.send({ cmd: 'register_user' }, createUserDto);
+    const response = await lastValueFrom(
+      this.client.send<UserRto>({ cmd: 'login_user' }, createUserDto),
+    );
+    return new SanitizedUserRto(response);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reservationsService.findOne(id);
-  }
+  // @Get()
+  // findAll() {
+  //   return this.reservationsService.findAll();
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reservationsService.remove(id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.reservationsService.findOne(id);
+  // }
+
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.reservationsService.remove(id);
+  // }
 }

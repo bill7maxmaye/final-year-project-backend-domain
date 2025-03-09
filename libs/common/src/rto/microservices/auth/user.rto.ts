@@ -1,0 +1,23 @@
+import { UserDocument } from 'apps/authentication/src/entities/user.entity';
+
+export class UserRto {
+  constructor(
+    public id: string,
+    public email: string,
+    public password: string,
+    public firstName: string,
+    public lastName: string,
+    public role: string,
+  ) {}
+
+  static fromEntity(entity: UserDocument): UserRto {
+    return new UserRto(
+      entity._id.toString(),
+      entity.email,
+      entity.password,
+      entity.firstName,
+      entity.lastName,
+      entity.role
+    );
+  }
+}

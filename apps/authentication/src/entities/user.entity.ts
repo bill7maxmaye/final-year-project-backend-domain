@@ -13,11 +13,11 @@ export class UserDocument extends BaseDocument {
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ required: false })
-  clientId?: string;
-
   @Prop({ required: true })
   password: string;
+
+  @Prop({ default: 'user' })
+  role: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserDocument);
