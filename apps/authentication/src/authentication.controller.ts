@@ -1,4 +1,4 @@
-import { Controller, Inject } from '@nestjs/common';
+import { Controller, Inject, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, MessagePattern, Payload } from '@nestjs/microservices';
 import { UserDocument } from 'apps/authentication/src/entities/user.entity';
@@ -6,6 +6,8 @@ import { AuthenticationService } from './authentication.service';
 import { CreateUserDto } from './dtos/userDto';
 import { UserRto } from '@app/common';
 import { LoginUserDto } from './dtos/login-user.dto';
+import { LoginResponse } from './rtos/login-response.rto';
+import { Response } from 'express';
 
 @Controller()
 export class AuthenticationController {
@@ -22,8 +24,8 @@ export class AuthenticationController {
   }
 
   @MessagePattern({ cmd: 'login_user' })
-  async login(@Payload() loginUserDto: LoginUserDto): Promise<UserRto> {
+  async login(@Payload() loginUserDto: LoginUserDto): Promise<LoginResponse> {
     const response = await this.authenticationService.loginUser(loginUserDto);
-    return UserRto.fromEntity(response);
+    return response;
   }
 }

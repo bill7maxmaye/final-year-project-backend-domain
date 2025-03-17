@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { SanitizedUserRto, UserRto } from '@app/common';
 import { lastValueFrom } from 'rxjs';
 import { LoginUserDto } from 'apps/authentication/src/dtos/login-user.dto';
+import { LoginResponse } from 'apps/authentication/src/rtos/login-response.rto';
 @Controller()
 export class AppController {
   constructor(
@@ -61,13 +62,13 @@ export class AppController {
   }
 
   @Post('/login')
-  async login(@Body() createUserDto: LoginUserDto): Promise<SanitizedUserRto> {
+  async login(@Body() createUserDto: LoginUserDto): Promise<LoginResponse> {
     console.log('📤 Sending request to Auth Microservice:', createUserDto);
     // const response = await this.client.send({ cmd: 'register_user' }, createUserDto);
     const response = await lastValueFrom(
-      this.client.send<UserRto>({ cmd: 'login_user' }, createUserDto),
+      this.client.send<LoginResponse>({ cmd: 'login_user' }, createUserDto),
     );
-    return new SanitizedUserRto(response);
+    return response;
   }
 
   // @Get()
