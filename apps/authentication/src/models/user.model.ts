@@ -1,6 +1,13 @@
 import { BaseDocument, BaseSchema } from '@app/common/models/base.model';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
+export enum UserStatus {
+  INACTIVE = 'inactive',
+  ACTIVE = 'active',
+  PENDING = 'pending',
+  SUSPENDED = 'suspended'
+}
+
 @Schema({ collection: 'users' })
 export class UserDocument extends BaseDocument {
   @Prop({ type: String, required: true })
@@ -45,8 +52,12 @@ export class UserDocument extends BaseDocument {
   @Prop({ type: Boolean, default: false })
   isVerified: boolean;
 
-  @Prop({ type: String, default: 'inactive' })
-  status: string;
+  @Prop({ 
+    type: String, 
+    enum: Object.values(UserStatus), 
+    default: UserStatus.INACTIVE 
+  })
+  status: UserStatus;
 }
 
 const UserSchema = SchemaFactory.createForClass(UserDocument);

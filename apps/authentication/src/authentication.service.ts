@@ -12,6 +12,7 @@ import { LoginResponse } from './rtos/login-response.rto';
 import { UserRepository } from './userRepository/user-repository';
 import { EmailService } from './services/email.service';
 import { VerifyEmailDto } from './dtos/verify-email.dto';
+import { UserStatus } from './models/user.model';
 
 
 @Injectable()
@@ -49,7 +50,7 @@ export class AuthenticationService {
         ...createUserDto,
         verificationCode,
         isVerified: false,
-        status: 'pending',
+        status: UserStatus.PENDING,
       });
 
       console.log('new user>>>', newUser);
@@ -104,12 +105,12 @@ export class AuthenticationService {
 
       // Update user verification status
       user.isVerified = true;
-      user.status = 'active';
+      user.status = UserStatus.ACTIVE;
       user.verificationCode = undefined;
 
       return await this.userRepository.findOneAndUpdate(
         { _id: user._id },
-        { isVerified: true, status: 'active', verificationCode: undefined },
+        { isVerified: true, status: UserStatus.ACTIVE, verificationCode: undefined },
       );
     } catch (error) {
       if (error instanceof MicroserviceException) {
