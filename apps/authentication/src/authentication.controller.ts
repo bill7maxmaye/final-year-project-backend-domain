@@ -6,6 +6,7 @@ import { AuthenticationService } from './authentication.service';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { CreateUserDto } from './dtos/userDto';
 import { LoginResponse } from './rtos/login-response.rto';
+import { VerifyEmailDto } from './dtos/verify-email.dto';
 
 @Controller()
 export class AuthenticationController {
@@ -18,6 +19,15 @@ export class AuthenticationController {
   @MessagePattern({ cmd: 'register_user' })
   async create(@Payload() createUserDto: CreateUserDto): Promise<UserRto> {
     const response = await this.authenticationService.createUser(createUserDto);
+    return UserRto.fromEntity(response);
+  }
+
+  @MessagePattern({ cmd: 'verify_email' })
+  async verifyEmail(
+    @Payload() verifyEmailDto: VerifyEmailDto,
+  ): Promise<UserRto> {
+    const response =
+      await this.authenticationService.verifyEmail(verifyEmailDto);
     return UserRto.fromEntity(response);
   }
 

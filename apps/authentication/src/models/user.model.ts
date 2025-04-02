@@ -22,7 +22,7 @@ export class UserDocument extends BaseDocument {
   phone?: string;
 
   @Prop({ type: String })
-  gender: string;
+  gender?: string;
 
   @Prop({ type: String, default: '' })
   profilePic: string;
@@ -38,6 +38,12 @@ export class UserDocument extends BaseDocument {
 
   @Prop({ type: [String] })
   preferences: string[];
+
+  @Prop({ type: String, required: false })
+  verificationCode?: string;
+
+  @Prop({ type: Boolean, default: false })
+  isVerified: boolean;
 
   @Prop({ type: String, default: 'inactive' })
   status: string;

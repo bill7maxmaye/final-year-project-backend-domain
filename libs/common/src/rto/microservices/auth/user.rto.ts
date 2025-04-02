@@ -11,13 +11,14 @@ export class UserRto {
   ) {}
 
   static fromEntity(entity: UserDocument): UserRto {
+    console.log('entity here', entity);
     return new UserRto(
       entity._id.toString(),
       entity.email,
       entity.password,
       entity.firstName,
       entity.lastName,
-      entity.role
+      entity.role,
     );
   }
 }
