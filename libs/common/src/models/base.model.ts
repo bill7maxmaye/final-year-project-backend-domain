@@ -1,4 +1,4 @@
-import { Prop, Schema } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { SchemaTypes, Types, Document } from 'mongoose';
 
 @Schema({ versionKey: false, timestamps: true })
@@ -12,3 +12,5 @@ export class BaseDocument extends Document {
   @Prop({ type: Date, default: Date.now })
   updatedAt: Date;
 }
+
+export const BaseSchema = SchemaFactory.createForClass(BaseDocument);

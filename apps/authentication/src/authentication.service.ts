@@ -1,15 +1,15 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { UserRepository } from './userRepository/user-repository';
-import { CreateUserDto } from './dtos/userDto';
-import * as bcrypt from 'bcryptjs';
-import { MicroserviceException } from '@app/common/exceptions/microservice-exception';
 import { ErrorMessage } from '@app/common/enum/authentication/error-message.enum';
 import { MicroserviceErrorCode } from '@app/common/enum/error/microservice-error.enum';
-import { UserDocument } from './entities/user.entity';
-import { LoginUserDto } from './dtos/login-user.dto';
-import { LoginResponse } from './rtos/login-response.rto';
+import { MicroserviceException } from '@app/common/exceptions/microservice-exception';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { LoginUserDto } from './dtos/login-user.dto';
+import { CreateUserDto } from './dtos/userDto';
+import { UserDocument } from './models/user.model';
+import { LoginResponse } from './rtos/login-response.rto';
+import { UserRepository } from './userRepository/user-repository';
 
 @Injectable()
 export class AuthenticationService {

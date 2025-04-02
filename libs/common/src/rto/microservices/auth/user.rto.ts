@@ -1,4 +1,4 @@
-import { UserDocument } from 'apps/authentication/src/entities/user.entity';
+import { UserDocument } from 'apps/authentication/src/models/user.model';
 
 export class UserRto {
   constructor(

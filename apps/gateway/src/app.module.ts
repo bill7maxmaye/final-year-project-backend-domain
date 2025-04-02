@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RabbitMQModule } from '@app/rabbitmq';
 import { ConfigModule } from '@app/common';
+import { SocialModule } from 'apps/social/src/social.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ConfigModule } from '@app/common';
     RabbitMQModule.register('profile_queue'),
     RabbitMQModule.register('social_queue'),
     RabbitMQModule.register('chat_queue'),
+    SocialModule,
   ],
   controllers: [AppController],
   providers: [AppService],

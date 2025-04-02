@@ -1,13 +1,11 @@
-import { Controller, Inject, Res } from '@nestjs/common';
+import { UserRto } from '@app/common';
+import { Controller, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, MessagePattern, Payload } from '@nestjs/microservices';
-import { UserDocument } from 'apps/authentication/src/entities/user.entity';
 import { AuthenticationService } from './authentication.service';
-import { CreateUserDto } from './dtos/userDto';
-import { UserRto } from '@app/common';
 import { LoginUserDto } from './dtos/login-user.dto';
+import { CreateUserDto } from './dtos/userDto';
 import { LoginResponse } from './rtos/login-response.rto';
-import { Response } from 'express';
 
 @Controller()
 export class AuthenticationController {

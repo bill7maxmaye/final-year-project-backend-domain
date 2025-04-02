@@ -4,7 +4,7 @@ import { Module } from '@nestjs/common';
 import {
   UserDocument,
   UserSchema,
-} from 'apps/authentication/src/entities/user.entity';
+} from 'apps/authentication/src/models/user.model';
 import { AuthenticationController } from './authentication.controller';
 import { AuthenticationService } from './authentication.service';
 import { UserRepository } from './userRepository/user-repository';
