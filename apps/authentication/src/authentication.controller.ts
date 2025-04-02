@@ -8,6 +8,7 @@ import { UserRto } from '@app/common';
 import { LoginUserDto } from './dtos/login-user.dto';
 import { LoginResponse } from './rtos/login-response.rto';
 import { Response } from 'express';
+import { VerifyEmailDto } from './dtos/verify-email.dto';
 
 @Controller()
 export class AuthenticationController {
@@ -19,7 +20,15 @@ export class AuthenticationController {
 
   @MessagePattern({ cmd: 'register_user' })
   async create(@Payload() createUserDto: CreateUserDto): Promise<UserRto> {
+    console.log("received here", createUserDto)
     const response = await this.authenticationService.createUser(createUserDto);
+    console.log("after response", response)
+    return UserRto.fromEntity(response);
+  }
+
+  @MessagePattern({ cmd: 'verify_email' })
+  async verifyEmail(@Payload() verifyEmailDto: VerifyEmailDto): Promise<UserRto> {
+    const response = await this.authenticationService.verifyEmail(verifyEmailDto);
     return UserRto.fromEntity(response);
   }
 

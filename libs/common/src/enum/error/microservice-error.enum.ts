@@ -5,4 +5,6 @@ export enum MicroserviceErrorCode {
   USER_NOT_FOUND = 'user-not-found',
   INTERNAL_SERVER_ERROR = 'internal-server-error',
   INVALID_CREDENTIALS = 'invalid-credentials',
+  INVALID_VERIFICATION = 'invalid-verification',
+  EMAIL_NOT_VERIFIED = 'email-not-verified',
 }

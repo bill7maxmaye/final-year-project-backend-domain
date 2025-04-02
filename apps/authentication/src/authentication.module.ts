@@ -1,19 +1,21 @@
-import { ConfigModule, DatabaseModule } from '@app/common';
-import { RabbitMQModule } from '@app/rabbitmq';
 import { Module } from '@nestjs/common';
-import {
-  UserDocument,
-  UserSchema,
-} from 'apps/authentication/src/entities/user.entity';
+import { ConfigModule } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AuthenticationController } from './authentication.controller';
 import { AuthenticationService } from './authentication.service';
 import { UserRepository } from './userRepository/user-repository';
 
+import { EmailService } from './services/email.service';
+import { UserDocument, UserSchema } from './entities/user.entity';
+import { DatabaseModule } from '@app/common';
+import { RabbitMQModule } from '@app/rabbitmq';
 
 @Module({
   imports: [
-    ConfigModule,
-    DatabaseModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     DatabaseModule.forFeature([
       { name: UserDocument.name, schema: UserSchema },
     ]),
@@ -25,6 +27,7 @@ import { UserRepository } from './userRepository/user-repository';
     RabbitMQModule.register('gateway_queue'),
   ],
   controllers: [AuthenticationController],
-  providers: [AuthenticationService, UserRepository],
+  providers: [AuthenticationService, UserRepository, EmailService],
+  exports: [AuthenticationService],
 })
 export class AuthenticationModule {}

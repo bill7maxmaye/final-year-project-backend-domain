@@ -3,10 +3,16 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RabbitMQModule } from '@app/rabbitmq';
 import { ConfigModule } from '@app/common';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtAuthGuard } from '../../authentication/src/guards/jwt-auth.guard';
 
 @Module({
   imports: [
     ConfigModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-secret-key',
+      signOptions: { expiresIn: '1h' },
+    }),
     RabbitMQModule.register('authentication_queue'),
     RabbitMQModule.register('notification_queue'),
     RabbitMQModule.register('profile_queue'),
@@ -14,6 +20,6 @@ import { ConfigModule } from '@app/common';
     RabbitMQModule.register('chat_queue'),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, JwtAuthGuard],
 })
 export class AppModule {}
