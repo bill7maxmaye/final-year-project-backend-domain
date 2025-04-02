@@ -4,7 +4,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({ collection: 'posts' })
 export class PostDocument extends BaseDocument {
-  @Prop({ type: String})
+  @Prop({ type: String })
   userId: string;
 
   @Prop({ type: String })
@@ -18,7 +18,6 @@ export class PostDocument extends BaseDocument {
 
   @Prop({ type: Boolean })
   isPinned: boolean;
-
 }
 
 const PostSchema = SchemaFactory.createForClass(PostDocument);

@@ -6,6 +6,7 @@ import { ConfigModule } from '@app/common';
 import { SocialModule } from 'apps/social/src/social.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../../authentication/src/guards/jwt-auth.guard';
+import { AuthController } from './authentication/auth.controller';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { JwtAuthGuard } from '../../authentication/src/guards/jwt-auth.guard';
     RabbitMQModule.register('chat_queue'),
     SocialModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, AuthController],
   providers: [AppService, JwtAuthGuard],
 })
 export class AppModule {}
