@@ -13,7 +13,7 @@ export class PostDocument extends BaseDocument {
   @Prop({ type: String })
   mediaUrl: string;
 
-  @Prop({ type: PostPrivacy })
+  @Prop({ type: String })
   privacy?: PostPrivacy;
 
   @Prop({ type: Boolean })

@@ -1,9 +1,9 @@
+import { ConfigModule, DatabaseModule } from '@app/common';
+import { RabbitMQModule } from '@app/rabbitmq';
 import { Module } from '@nestjs/common';
+import { PostDocument, PostSchema } from './models/post.model';
 import { SocialController } from './social.controller';
 import { SocialService } from './social.service';
-import { RabbitMQModule } from '@app/rabbitmq';
-import { ConfigModule, DatabaseModule } from '@app/common';
-import { PostDocument, PostSchema } from './models/post.model';
 
 @Module({
   imports: [
