@@ -27,6 +27,16 @@ export abstract class BaseRepository<TDocument extends BaseDocument> {
     }
     return document;
   }
+  async deleteOne(filterQuery: FilterQuery<TDocument>): Promise<boolean> {
+    const result = await this.model.deleteOne(filterQuery).exec();
+    if (result.deletedCount === 0) {
+      this.logger.warn(
+        `Document not found for deletion with filter query: ${JSON.stringify(filterQuery)}`,
+      );
+      throw new NotFoundException('The document was not found for deletion');
+    }
+    return true;
+  }
 
   async findOneAndUpdate(
     filterQuery: FilterQuery<TDocument>,

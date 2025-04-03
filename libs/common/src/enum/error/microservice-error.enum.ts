@@ -7,4 +7,5 @@ export enum MicroserviceErrorCode {
   INVALID_CREDENTIALS = 'invalid-credentials',
   INVALID_VERIFICATION = 'invalid-verification',
   EMAIL_NOT_VERIFIED = 'email-not-verified',
+  POST_NOT_FOUND = 'post-not-found',
 }

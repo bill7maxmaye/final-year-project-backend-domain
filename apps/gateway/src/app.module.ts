@@ -7,6 +7,8 @@ import { SocialModule } from 'apps/social/src/social.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../../authentication/src/guards/jwt-auth.guard';
 import { AuthController } from './authentication/auth.controller';
+import { PostController } from './controllers/social/posts/post.controller';
+
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { AuthController } from './authentication/auth.controller';
     RabbitMQModule.register('chat_queue'),
     SocialModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, PostController],
   providers: [AppService, JwtAuthGuard],
 })
 export class AppModule {}
