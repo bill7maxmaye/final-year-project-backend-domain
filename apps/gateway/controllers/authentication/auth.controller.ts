@@ -1,4 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { ACTION } from 'libs/common/enum/action.enum';
+import { CONTROLLER } from 'libs/common/enum/controller.enum';
+import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
 import { NetworkingService } from 'libs/networking';
 
 @Controller('auth')
@@ -12,7 +15,7 @@ export class AuthenticationController {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const response = await this.networking.send<any>(
-        'register_user',
+        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.REGISTER}`,
         createUserDto,
       );
 
@@ -28,7 +31,10 @@ export class AuthenticationController {
   login(@Body() createUserDto: any): any {
     console.log('📤 Publishing user.registered event:', createUserDto);
 
-    this.networking.emit('registered', createUserDto);
+    this.networking.emit(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.LOGIN}`,
+      createUserDto,
+    );
     return { status: 'OK', message: 'Registration request sent' };
   }
 }
