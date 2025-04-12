@@ -37,6 +37,15 @@
         "tsConfigPath": "apps/gateway/tsconfig.app.json"
       }
     },
+    "networking": {
+      "type": "library",
+      "root": "libs/networking",
+      "entryFile": "index",
+      "sourceRoot": "libs/networking",
+      "compilerOptions": {
+        "tsConfigPath": "libs/networking/tsconfig.lib.json"
+      }
+    },
     "rabbitmq": {
       "type": "library",
       "root": "libs/rabbitmq",

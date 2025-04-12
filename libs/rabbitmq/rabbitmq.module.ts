@@ -1,5 +1,8 @@
 import { Module, DynamicModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { rabbitmqConfig } from 'libs/common/config/rabbitmq.config';
+import { TRANSPORT_PROXY } from 'libs/common/constant/transport-proxy-token.constant';
 
 @Module({})
 export class RabbitMQModule {
@@ -7,17 +10,30 @@ export class RabbitMQModule {
     return {
       module: RabbitMQModule,
       imports: [
-        ClientsModule.register([
+        ConfigModule.forRoot({
+          load: [rabbitmqConfig],
+        }),
+        ClientsModule.registerAsync([
           {
-            name: 'RABBITMQ_SERVICE',
-            transport: Transport.RMQ,
-            options: {
-              urls: ['amqp://guest:guest@localhost:5672'], // RabbitMQ connection URL
-              queue,
-              queueOptions: {
-                durable: false,
-              },
+            name: TRANSPORT_PROXY.RABBITMQ,
+            imports: [ConfigModule],
+            useFactory: (configService: ConfigService) => {
+              const url = configService.get<string>('rabbitmq.url');
+              if (!url) {
+                throw new Error('RabbitMQ URL is not configured');
+              }
+              return {
+                transport: Transport.RMQ,
+                options: {
+                  urls: [url],
+                  queue,
+                  queueOptions: {
+                    durable: false,
+                  },
+                },
+              };
             },
+            inject: [ConfigService],
           },
         ]),
       ],

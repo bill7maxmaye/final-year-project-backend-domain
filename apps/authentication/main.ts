@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AuthenticationModule } from './authentication.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { MICROSERVICE_QUEUE } from 'libs/common/enum/microservice-queue.enum';
 
 async function bootstrap() {
   const app = await NestFactory.create(AuthenticationModule);
@@ -9,18 +10,7 @@ async function bootstrap() {
     transport: Transport.RMQ,
     options: {
       urls: ['amqp://localhost:5672'],
-      queue: 'authentication_queue',
-      queueOptions: {
-        durable: false,
-      },
-    },
-  });
-
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: ['amqp://localhost:5672'],
-      queue: 'gateway_queue',
+      queue: MICROSERVICE_QUEUE.AUTHENTICATION,
       queueOptions: {
         durable: false,
       },

@@ -29,6 +29,12 @@
       ],
       "@app/rabbitmq/*": [
         "libs/rabbitmq/src/*"
+      ],
+      "@pp/networking": [
+        "libs/networking/src"
+      ],
+      "@pp/networking/*": [
+        "libs/networking/src/*"
       ]
     }
   }

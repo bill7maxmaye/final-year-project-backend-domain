@@ -99,7 +99,8 @@
     ],
     "moduleNameMapper": {
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
-      "^@app/rabbitmq(|/.*)$": "<rootDir>/libs/rabbitmq/src/$1"
+      "^@app/rabbitmq(|/.*)$": "<rootDir>/libs/rabbitmq/src/$1",
+      "^@pp/networking(|/.*)$": "<rootDir>/libs/networking/src/$1"
     },
     "workspaces": [
       "apps/gateway",

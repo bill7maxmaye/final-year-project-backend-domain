@@ -1,18 +1,30 @@
-import { Controller, Inject } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientProxy, MessagePattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthenticationService } from './authentication.service';
 
 @Controller()
 export class AuthenticationController {
   constructor(
     private configService: ConfigService,
-    @Inject('RABBITMQ_SERVICE') private client: ClientProxy,
     private readonly authenticationService: AuthenticationService,
   ) {}
 
-  @MessagePattern({ cmd: 'register_user' })
-  register(@Payload() createUserDto: any): any {
+  @MessagePattern('register_user')
+  handleUserRegistered(@Payload() createUserDto: any): any {
     return createUserDto;
+  }
+
+  @EventPattern('registered')
+  handleUserLogin(@Payload() createUserDto: any): void {
+    console.log('📥 Received user.registered event:', createUserDto);
+
+    try {
+      console.log(
+        '✅ User created successfully (replace with your actual logic)',
+      );
+    } catch (error) {
+      console.error('🔥 Error creating user:', error);
+    }
   }
 }

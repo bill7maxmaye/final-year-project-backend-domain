@@ -1,0 +1,3 @@
+export const TRANSPORT_PROXY = {
+  RABBITMQ: 'RABBITMQ_MICROSERVICE',
+};

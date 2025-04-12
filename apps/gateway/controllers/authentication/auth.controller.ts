@@ -1,15 +1,9 @@
-/* eslint-disable prettier/prettier */
-import { Body, Controller, Inject, Post } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { Body, Controller, Post } from '@nestjs/common';
+import { NetworkingService } from 'libs/networking';
 
 @Controller('auth')
 export class AuthenticationController {
-  constructor(
-    private configService: ConfigService,
-    @Inject('RABBITMQ_SERVICE') private client: ClientProxy,
-  ) {}
+  constructor(private readonly networking: NetworkingService) {}
 
   @Post('register')
   async register(@Body() createUserDto: any): Promise<any> {
@@ -17,8 +11,9 @@ export class AuthenticationController {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const response = await lastValueFrom<any>(
-        this.client.send<any, any>({ cmd: 'register_user' }, createUserDto),
+      const response = await this.networking.send<any>(
+        'register_user',
+        createUserDto,
       );
 
       console.log('📥 Received response from Auth Microservice:', response);
@@ -27,5 +22,13 @@ export class AuthenticationController {
       console.error('🔥 Error communicating with Auth Microservice:', error);
       throw error;
     }
+  }
+
+  @Post('login')
+  login(@Body() createUserDto: any): any {
+    console.log('📤 Publishing user.registered event:', createUserDto);
+
+    this.networking.emit('registered', createUserDto);
+    return { status: 'OK', message: 'Registration request sent' };
   }
 }
