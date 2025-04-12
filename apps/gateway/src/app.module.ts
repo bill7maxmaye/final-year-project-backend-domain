@@ -3,11 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RabbitMQModule } from '@app/rabbitmq';
 import { ConfigModule } from '@app/common';
-import { SocialModule } from 'apps/social/src/social.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../../authentication/src/guards/jwt-auth.guard';
-import { AuthController } from './authentication/auth.controller';
-import { PostController } from './controllers/social/posts/post.controller';
 
 
 @Module({
@@ -22,9 +19,8 @@ import { PostController } from './controllers/social/posts/post.controller';
     RabbitMQModule.register('profile_queue'),
     RabbitMQModule.register('social_queue'),
     RabbitMQModule.register('chat_queue'),
-    SocialModule,
   ],
-  controllers: [AppController, AuthController, PostController],
+  controllers: [AppController],
   providers: [AppService, JwtAuthGuard],
 })
 export class AppModule {}
