@@ -14,22 +14,22 @@ services:
     networks:
       - my_network
 
-  gateway:
-    build:
-      context: .
-      dockerfile: apps/gateway/Dockerfile
-      target: development
-    command: pnpm run start:dev
-    ports:
-      - "3000:3000"
-    environment:
-      RABBITMQ_URL: amqp://rabbitmq:5672
-    depends_on:
-      - rabbitmq
-    networks:
-      - my_network
-    volumes:
-      - .:/usr/src/app  
+  # gateway:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/gateway/Dockerfile
+  #     target: development
+  #   command: pnpm run start:dev
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     RABBITMQ_URL: amqp://rabbitmq:5672
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - my_network
+  #   volumes:
+  #     - .:/usr/src/app  
 
   # authentication:
   #   build:
