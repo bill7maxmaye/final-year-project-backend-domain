@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import socketConfig from '@app/common//config/socket.config';
 import { Logger } from '@nestjs/common';
