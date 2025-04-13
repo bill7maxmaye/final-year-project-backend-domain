@@ -1,4 +1,4 @@
-
+version: '3.8'
 
 services:
   rabbitmq:
@@ -6,13 +6,47 @@ services:
     container_name: rabbitmq
     restart: always
     ports:
-      - "5672:5672"   # AMQP port
-      - "15672:15672" # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     networks:
       - my_network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+      target: development
+    command: pnpm run start:dev
+    ports:
+      - "3000:3000"
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    networks:
+      - my_network
+    volumes:
+      - .:/usr/src/app  
+
+  # authentication:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/authentication/Dockerfile
+  #     target: development
+  #   command: pnpm run start:dev authentication
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     RABBITMQ_URL: amqp://rabbitmq:5672
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - my_network
+  #   volumes:
+  #     - .:/usr/src/app
 
 networks:
   my_network:

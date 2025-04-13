@@ -19,22 +19,22 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@app/common": [
-        "libs/common/src"
+        "libs/common"
       ],
       "@app/common/*": [
-        "libs/common/src/*"
+        "libs/common*"
       ],
       "@app/rabbitmq": [
-        "libs/rabbitmq/src"
+        "libs/rabbitmq"
       ],
       "@app/rabbitmq/*": [
-        "libs/rabbitmq/src/*"
+        "libs/rabbitmq*"
       ],
       "@pp/networking": [
-        "libs/networking/src"
+        "libs/networking"
       ],
       "@pp/networking/*": [
-        "libs/networking/src/*"
+        "libs/networking*"
       ]
     }
   }
