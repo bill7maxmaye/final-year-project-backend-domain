@@ -5,10 +5,11 @@ import { rabbitmqConfig } from 'libs/common/config/rabbitmq.config';
 import { TRANSPORT_PROXY } from 'libs/common/constant/transport-proxy-token.constant';
 import { CONFIG_TOKEN } from '../common/config/constant/config-token.constant';
 import { RabbitMQConfig } from '../common/config/interfaces/rabbitmq-config.interface';
+import { MICROSERVICE_QUEUE } from '../common/enum/microservice-queue.enum';
 
 @Module({})
 export class RabbitMQModule {
-  static register(queue: string): DynamicModule {
+  static register(queue: MICROSERVICE_QUEUE): DynamicModule {
     return {
       module: RabbitMQModule,
       imports: [
@@ -18,27 +19,20 @@ export class RabbitMQModule {
         }),
         ClientsModule.registerAsync([
           {
-            name: TRANSPORT_PROXY.RABBITMQ,
-            imports: [ConfigModule],
+            name: `${TRANSPORT_PROXY.RABBITMQ}_${queue}`, // Unique name per queue
             useFactory: (configService: ConfigService) => {
               const rmqConfig = configService.get<RabbitMQConfig>(
                 CONFIG_TOKEN.RABBITMQ,
               );
-              if (!rmqConfig || !rmqConfig.url) {
-                throw new Error('RabbitMQ URL is not configured');
-              }
-              Logger.log(
-                `Connecting to RabbitMQ: ${rmqConfig.url}`,
-                'RabbitMQModule',
-              );
+              if (!rmqConfig?.url) throw new Error('RabbitMQ URL missing');
+
+              Logger.log(`Connecting to RabbitMQ queue: ${queue}`);
               return {
                 transport: Transport.RMQ,
                 options: {
                   urls: [rmqConfig.url],
                   queue,
-                  queueOptions: {
-                    durable: false,
-                  },
+                  queueOptions: { durable: false },
                 },
               };
             },

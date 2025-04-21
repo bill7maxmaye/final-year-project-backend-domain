@@ -5,6 +5,6 @@ import { DatabaseConfig } from './interfaces/database-config.interface';
 export default registerAs(
   CONFIG_TOKEN.DATABASE,
   (): DatabaseConfig => ({
-    uri: process.env.MONGO_URI || '',
+    uri: process.env.MONGODB_URI || '',
   }),
 );

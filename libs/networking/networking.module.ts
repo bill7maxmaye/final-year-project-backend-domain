@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { rabbitmqConfig } from '../common/config/rabbitmq.config';
 import { NetworkingService } from './networking.service';
-import { RabbitMQModule } from 'libs/rabbitmq';
-import { MICROSERVICE_QUEUE } from 'libs/common/enum/microservice-queue.enum';
 
 @Module({
-  imports: [RabbitMQModule.register(MICROSERVICE_QUEUE.AUTHENTICATION)],
+  imports: [
+    ConfigModule.forRoot({
+      load: [rabbitmqConfig],
+    }),
+  ],
   providers: [NetworkingService],
   exports: [NetworkingService],
 })

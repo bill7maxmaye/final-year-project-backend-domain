@@ -54,6 +54,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/rabbitmq/tsconfig.lib.json"
       }
+    },
+    "social": {
+      "type": "application",
+      "root": "apps/social",
+      "entryFile": "main",
+      "sourceRoot": "apps/social",
+      "compilerOptions": {
+        "tsConfigPath": "apps/social/tsconfig.app.json"
+      }
     }
   }
 }

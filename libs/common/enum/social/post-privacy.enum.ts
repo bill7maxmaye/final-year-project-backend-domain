@@ -1,5 +1,5 @@
 export enum PostPrivacy {
   PUBLIC = 'public',
-  FRIENDONLY = 'friend_only',
+  FRIEND_ONLY = 'friend_only',
   CUSTOM = 'custom',
 }
