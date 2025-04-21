@@ -3,18 +3,20 @@ import { SocialController } from './social.controller';
 import { SocialService } from './social.service';
 
 describe('SocialController', () => {
-  let controller: SocialController;
+  let socialController: SocialController;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const app: TestingModule = await Test.createTestingModule({
       controllers: [SocialController],
       providers: [SocialService],
     }).compile();
 
-    controller = module.get<SocialController>(SocialController);
+    socialController = app.get<SocialController>(SocialController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  describe('root', () => {
+    it('should return "Hello World!"', () => {
+      expect(socialController.getHello()).toBe('Hello World!');
+    });
   });
 });

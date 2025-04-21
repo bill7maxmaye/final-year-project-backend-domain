@@ -1,3 +1,4 @@
+import { MICROSERVICE_QUEUE } from '@app/common//enum/microservice-queue.enum';
 import { Body, Controller, Post } from '@nestjs/common';
 import { ACTION } from 'libs/common/enum/action.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';
@@ -15,6 +16,7 @@ export class AuthenticationController {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const response = await this.networking.send<any>(
+        MICROSERVICE_QUEUE.AUTHENTICATION,
         `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.REGISTER}`,
         createUserDto,
       );
@@ -32,6 +34,8 @@ export class AuthenticationController {
     console.log('📤 Publishing user.registered event:', createUserDto);
 
     this.networking.emit(
+      MICROSERVICE_QUEUE.AUTHENTICATION,
+
       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.LOGIN}`,
       createUserDto,
     );
