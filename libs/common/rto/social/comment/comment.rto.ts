@@ -20,4 +20,4 @@ export class CommentRto {
     this.createdAt = comment.createdAt;
     this.updatedAt = comment.updatedAt;
   }
-} 
+}

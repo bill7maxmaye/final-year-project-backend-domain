@@ -23,6 +23,8 @@ export enum ACTION {
   CREATE_POST = 'create-post',
   UPDATE_POST = 'update-post',
   DELETE_POST = 'delete-post',
+  GET_MANY = 'get-many',
+  GET = 'get',
   RETRIEVE_POST = 'retrieve-post',
   LIKE_POST = 'like-post',
   UNLIKE_POST = 'unlike-post',
