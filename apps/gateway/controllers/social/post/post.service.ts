@@ -4,7 +4,6 @@ import { UpdatePostGatewayDto } from '@app/common//dto/gateway/social/post/updat
 import { CreatePostDto } from '@app/common//dto/microservices/social/post/create-post.dto';
 import { ACTION } from '@app/common//enum/action.enum';
 import { CONTROLLER } from '@app/common//enum/controller.enum';
-import { MICROSERVICE_QUEUE } from '@app/common//enum/microservice-queue.enum';
 import { MICROSERVICE } from '@app/common//enum/microservice.enum';
 import { PostRto } from '@app/common//rto/social/post/post.rto';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -26,7 +25,7 @@ export class PostService {
 
     try {
       return await this.networking.send<PostRto>(
-        MICROSERVICE_QUEUE.SOCIAL,
+        // MICROSERVICE_QUEUE.SOCIAL,
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.CREATE}`,
         payload,
       );
@@ -46,7 +45,7 @@ export class PostService {
 
     try {
       return await this.networking.send<PostRto>(
-        MICROSERVICE_QUEUE.SOCIAL,
+        // MICROSERVICE_QUEUE.SOCIAL,
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.UPDATE}`,
         { id, data: payload },
       );
@@ -59,7 +58,7 @@ export class PostService {
   async deletePost(id: string): Promise<{ success: boolean }> {
     try {
       const result = await this.networking.send<{ success: boolean }>(
-        MICROSERVICE_QUEUE.SOCIAL,
+        // MICROSERVICE_QUEUE.SOCIAL,
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.DELETE}`,
         { id },
       );
