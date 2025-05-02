@@ -1,4 +1,6 @@
+import { CreateUserDto } from '@app/common//dto/microservices/authentication/userDto';
 import { MICROSERVICE_QUEUE } from '@app/common//enum/microservice-queue.enum';
+import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 import { Body, Controller, Post } from '@nestjs/common';
 import { ACTION } from 'libs/common/enum/action.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';
@@ -10,12 +12,11 @@ export class AuthenticationController {
   constructor(private readonly networking: NetworkingService) {}
 
   @Post('register')
-  async register(@Body() createUserDto: any): Promise<any> {
+  async register(@Body() createUserDto: CreateUserDto): Promise<any> {
     console.log('📤 Sending request to Auth Microservice:', createUserDto);
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const response = await this.networking.send<any>(
+      const response = await this.networking.send<UserRto>(
         MICROSERVICE_QUEUE.AUTHENTICATION,
         `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.REGISTER}`,
         createUserDto,

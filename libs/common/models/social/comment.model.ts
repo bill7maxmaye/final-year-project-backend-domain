@@ -26,4 +26,4 @@ export class Comment {
   isDeleted: boolean;
 }
 
-export const CommentSchema = SchemaFactory.createForClass(Comment); 
+export const CommentSchema = SchemaFactory.createForClass(Comment);

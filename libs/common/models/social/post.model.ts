@@ -3,7 +3,6 @@ import { Schema as MongooseSchema } from 'mongoose';
 import { BaseDocument } from '../base.model';
 import { defaultNumberOf, PostsNumberOfDocument } from './post-number.model';
 
-
 @Schema({ timestamps: true })
 export class PostDocument extends BaseDocument {
   @Prop({ required: false })

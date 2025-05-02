@@ -5,6 +5,8 @@ import { AuthenticationService } from './authentication.service';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';
 import { ACTION } from 'libs/common/enum/action.enum';
+import { CreateUserDto } from '@app/common//dto/microservices/authentication/userDto';
+import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 
 @Controller()
 export class AuthenticationController {
@@ -16,8 +18,11 @@ export class AuthenticationController {
   @MessagePattern(
     `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.REGISTER}`,
   )
-  handleUserRegistered(@Payload() createUserDto: any): any {
-    return createUserDto;
+  async handleUserRegistered(
+    @Payload() createUserDto: CreateUserDto,
+  ): Promise<UserRto> {
+    const response = await this.authenticationService.createUser(createUserDto);
+    return UserRto.fromEntity(response);
   }
 
   @EventPattern(
