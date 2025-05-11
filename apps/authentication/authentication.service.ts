@@ -8,9 +8,14 @@ import {
 } from '@app/common//models/authentication/user.model';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import bcrypt from 'bcryptjs/umd/types';
+import * as bcrypt from 'bcryptjs';
 import { EmailService } from './email.service';
-
+import { VerifyEmailDto } from '@app/common//dto/microservices/authentication/verify-email.dto';
+import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
+import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
+import * as jwt from 'jsonwebtoken';
+import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
+import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
 @Injectable()
 export class AuthenticationService {
   constructor(
@@ -20,6 +25,9 @@ export class AuthenticationService {
   ) {}
 
   private generateVerificationCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+  private generateResetCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
@@ -39,7 +47,7 @@ export class AuthenticationService {
       createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
       // console.log('before verification', this.createUser);
       const verificationCode = this.generateVerificationCode();
-      console.log('after verification', verificationCode);
+      //console.log('after verification', verificationCode);
 
       // Create user in database with verification code
       const newUser = await this.userRepository.create({
@@ -67,5 +75,191 @@ export class AuthenticationService {
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<UserDocument> {
+    try {
+      const user = await this.userRepository.findOne({
+        email: verifyEmailDto.email,
+      });
+
+      if (!user) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      if (user.isVerified) {
+        throw MicroserviceException.fromException(
+          'Email already verified',
+          HttpStatus.BAD_REQUEST,
+          MicroserviceErrorCode.INVALID_VERIFICATION,
+        );
+      }
+
+      if (user.verificationCode !== verifyEmailDto.verificationCode) {
+        throw MicroserviceException.fromException(
+          'Invalid verification code',
+          HttpStatus.BAD_REQUEST,
+          MicroserviceErrorCode.INVALID_VERIFICATION,
+        );
+      }
+
+      // Update user verification status
+      user.isVerified = true;
+      user.status = UserStatus.ACTIVE;
+      user.verificationCode = undefined;
+
+      return await this.userRepository.findOneAndUpdate(
+        { _id: user._id },
+        {
+          isVerified: true,
+          status: UserStatus.ACTIVE,
+          verificationCode: undefined,
+        },
+      );
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async loginUser(loginUserDto: LoginUserDto): Promise<LoginResponse> {
+    try {
+      const user = await this.userRepository
+        .findOne({ email: loginUserDto.email })
+        .catch(() => null);
+      if (!user) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      if (!user.isVerified) {
+        throw MicroserviceException.fromException(
+          'Please verify your email first',
+          HttpStatus.UNAUTHORIZED,
+          MicroserviceErrorCode.EMAIL_NOT_VERIFIED,
+        );
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        loginUserDto.password,
+        user.password,
+      );
+      if (!isPasswordValid) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.INVALID_CREDENTIALS,
+          HttpStatus.UNAUTHORIZED,
+          MicroserviceErrorCode.INVALID_CREDENTIALS,
+        );
+      }
+
+      const payload = { userId: user._id, email: user.email, role: user.role };
+      const jwtSecret = this.configService.get<string>('JWT_SECRET');
+
+      const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
+
+      return new LoginResponse(accessToken, user._id.toString());
+    } catch {
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async resendVerificationCode(email: string): Promise<UserDocument> {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw MicroserviceException.fromException(
+        ErrorMessage.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+        MicroserviceErrorCode.USER_NOT_FOUND,
+      );
+    }
+
+    if (user.isVerified) {
+      throw MicroserviceException.fromException(
+        'Email already verified',
+        HttpStatus.BAD_REQUEST,
+        MicroserviceErrorCode.INVALID_VERIFICATION,
+      );
+    }
+
+    const newCode = this.generateVerificationCode();
+    await this.userRepository.findOneAndUpdate(
+      { _id: user._id },
+      { verificationCode: newCode },
+    );
+
+    await this.emailService.sendVerificationEmail(user.email, newCode);
+
+    return this.userRepository.findOne({ _id: user._id });
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<boolean> {
+    const { email } = forgotPasswordDto;
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw MicroserviceException.fromException(
+        ErrorMessage.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+        MicroserviceErrorCode.USER_NOT_FOUND,
+      );
+    }
+
+    // Generate code and store it
+    const resetCode = this.generateResetCode();
+    await this.userRepository.findOneAndUpdate(
+      { _id: user._id },
+      { resetCode },
+    );
+
+    // Send email with reset code
+    await this.emailService.sendVerificationEmail(email, resetCode);
+
+    return true;
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<boolean> {
+    const { email, resetCode, newPassword } = resetPasswordDto;
+    const user = await this.userRepository.findOne({ email });
+
+    if (!user) {
+      throw MicroserviceException.fromException(
+        ErrorMessage.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+        MicroserviceErrorCode.USER_NOT_FOUND,
+      );
+    }
+
+    if (!user.resetCode || user.resetCode !== resetCode) {
+      throw MicroserviceException.fromException(
+        'Invalid or missing password reset code',
+        HttpStatus.BAD_REQUEST,
+        MicroserviceErrorCode.INVALID_VERIFICATION,
+      );
+    }
+
+    // Update the user’s password and clear the reset code
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userRepository.findOneAndUpdate(
+      { _id: user._id },
+      { password: hashedPassword, resetCode: undefined },
+    );
+
+    return true;
   }
 }

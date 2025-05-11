@@ -2,6 +2,8 @@ export enum ACTION {
   // 1. User Authentication and Profiles
   REGISTER = 'register',
   LOGIN = 'login',
+  VERIFY_EMAIL = 'verify-email',
+  RESEND_VERIFICATION_EMAIL = 'resend-verification-email',
   LOGOUT = 'logout',
   UPDATE_EMAIL = 'update-email',
   CONFIRM_EMAIL = 'confirm-email',
@@ -23,6 +25,8 @@ export enum ACTION {
   CREATE_POST = 'create-post',
   UPDATE_POST = 'update-post',
   DELETE_POST = 'delete-post',
+  GET_MANY = 'get-many',
+  GET = 'get',
   RETRIEVE_POST = 'retrieve-post',
   LIKE_POST = 'like-post',
   UNLIKE_POST = 'unlike-post',

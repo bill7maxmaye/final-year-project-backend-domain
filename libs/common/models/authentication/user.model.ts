@@ -49,6 +49,9 @@ export class UserDocument extends BaseDocument {
   @Prop({ type: String, required: false })
   verificationCode?: string;
 
+  @Prop({ type: String, default: '' })
+  resetCode?: string;
+
   @Prop({ type: Boolean, default: false })
   isVerified: boolean;
 

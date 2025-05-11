@@ -7,7 +7,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthenticationController } from './authentication.controller';
 import { AuthenticationService } from './authentication.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserDocument } from '@app/common//models/authentication/user.model';
+import {
+  UserDocument,
+  UserSchema,
+} from '@app/common//models/authentication/user.model';
 import { UserRepository } from '@app/common//baseRepository/userRepository/user.repository';
 import { EmailService } from './email.service';
 
@@ -26,7 +29,7 @@ import { EmailService } from './email.service';
       isGlobal: true,
     }),
     MongooseModule.forFeature([
-      { name: UserDocument.name, schema: UserDocument },
+      { name: UserDocument.name, schema: UserSchema },
     ]),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -38,6 +41,6 @@ import { EmailService } from './email.service';
   ],
   controllers: [AuthenticationController],
   providers: [AuthenticationService, UserRepository, EmailService],
-  exports: [AuthenticationService],
+  exports: [AuthenticationService, UserRepository, EmailService],
 })
 export class AuthenticationModule {}
