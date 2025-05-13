@@ -80,6 +80,9 @@ importers:
       nodemailer:
         specifier: ^6.9.9
         version: 6.10.1
+      passport:
+        specifier: ^0.7.0
+        version: 0.7.0
       passport-jwt:
         specifier: ^4.0.1
         version: 4.0.1
@@ -132,6 +135,9 @@ importers:
       '@types/node':
         specifier: ^22.10.7
         version: 22.14.1
+      '@types/passport-jwt':
+        specifier: ^4.0.1
+        version: 4.0.1
       '@types/supertest':
         specifier: ^6.0.2
         version: 6.0.3
@@ -1229,6 +1235,15 @@ packages:
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
+
+  '@types/passport-jwt@4.0.1':
+    resolution: {integrity: sha512-Y0Ykz6nWP4jpxgEUYq8NoVZeCQPo1ZndJLfapI249g1jHChvRfZRO/LS3tqu26YgAS/laI1qx98sYGz0IalRXQ==}
+
+  '@types/passport-strategy@0.2.38':
+    resolution: {integrity: sha512-GC6eMqqojOooq993Tmnmp7AUTbbQSgilyvpCYQjT+H6JfG/g6RGc7nXEniZlp0zyKJ0WUdOiZWLBZft9Yug1uA==}
+
+  '@types/passport@1.0.17':
+    resolution: {integrity: sha512-aciLyx+wDwT2t2/kJGJR2AEeBz0nJU4WuRX04Wu9Dqc5lSUtwu0WERPHYsLhF9PtseiAMPBGNUOtFjxZ56prsg==}
 
   '@types/qs@6.9.18':
     resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
@@ -5606,6 +5621,20 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/normalize-package-data@2.4.4': {}
+
+  '@types/passport-jwt@4.0.1':
+    dependencies:
+      '@types/jsonwebtoken': 9.0.7
+      '@types/passport-strategy': 0.2.38
+
+  '@types/passport-strategy@0.2.38':
+    dependencies:
+      '@types/express': 5.0.1
+      '@types/passport': 1.0.17
+
+  '@types/passport@1.0.17':
+    dependencies:
+      '@types/express': 5.0.1
 
   '@types/qs@6.9.18': {}
 

@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthenticationController } from './controllers/authentication/auth.controller';
 import { NetworkingModule } from 'libs/networking';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { rabbitmqConfig } from 'libs/common/config/rabbitmq.config';
 import { SocialService } from './controllers/social/social.service';
 import { PostController } from './controllers/social/post/post.controller';
@@ -15,15 +15,29 @@ import s3StorageConfig from '@app/common//config/s3-storage.config';
 import { ReelController } from './controllers/reel/reel.controller';
 import { ReelService } from './controllers/reel/reel.service';
 import databaseConfig from '@app/common//config/database.config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
+import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
   imports: [
+    AuthenticationModule,
     ConfigModule.forRoot({
       load: [rabbitmqConfig, socketConfig, s3StorageConfig, databaseConfig],
       isGlobal: true,
     }),
     NetworkingModule,
     StorageModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
+    }),
   ],
   controllers: [
     AppController,
@@ -32,6 +46,13 @@ import databaseConfig from '@app/common//config/database.config';
     PostController,
     ReelController,
   ],
-  providers: [AppService, SocialService, PostService, ReelService, s3Provider],
+  providers: [
+    AppService,
+    SocialService,
+    PostService,
+    ReelService,
+    s3Provider,
+    JwtStrategy,
+  ],
 })
 export class AppModule {}

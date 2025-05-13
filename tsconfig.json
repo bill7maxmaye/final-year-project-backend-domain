@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["node", "passport-jwt"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
