@@ -81,4 +81,13 @@ export class AuthenticationController {
   ): Promise<boolean> {
     return this.authenticationService.resetPassword(resetPasswordDto);
   }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+  )
+  async getUser(@Payload() userId: string): Promise<UserRto> {
+    console.log('received data', userId);
+    const response = await this.authenticationService.getUser(userId);
+    return UserRto.fromEntity(response);
+  }
 }

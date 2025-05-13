@@ -5,7 +5,8 @@ import { CreateUserDto } from '@app/common//dto/microservices/authentication/use
 import { VerifyEmailDto } from '@app/common//dto/microservices/authentication/verify-email.dto';
 import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
 import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Payload } from '@nestjs/microservices';
 import { ACTION } from 'libs/common/enum/action.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
@@ -100,4 +101,22 @@ export class AuthenticationController {
       resetPasswordDto,
     );
   }
+
+  // @Get('get-user')
+  // async getUser(@Payload() userId: string): Promise<UserRto> {
+  //   console.log('📤 Sending request to Auth Microservice:', userId);
+
+  //   try {
+  //     const response = await this.networking.send<UserRto>(
+  //       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+  //       userId,
+  //     );
+
+  //     console.log('📥 Received response from Auth Microservice:', response);
+  //     return response;
+  //   } catch (error) {
+  //     console.error('🔥 Error communicating with Auth Microservice:', error);
+  //     throw error;
+  //   }
+  // }
 }

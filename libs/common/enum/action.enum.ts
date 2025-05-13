@@ -108,4 +108,5 @@ export enum ACTION {
   UPDATE = 'update',
   DELETE = 'delete',
   LIST_ALL = 'list-all',
+  GET_USER = 'get-user',
 }

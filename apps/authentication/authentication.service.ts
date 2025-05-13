@@ -262,4 +262,16 @@ export class AuthenticationService {
 
     return true;
   }
+
+  async getUser(userId: string): Promise<UserDocument> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw MicroserviceException.fromException(
+        ErrorMessage.USER_NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+        MicroserviceErrorCode.USER_NOT_FOUND,
+      );
+    }
+    return user;
+  }
 }
