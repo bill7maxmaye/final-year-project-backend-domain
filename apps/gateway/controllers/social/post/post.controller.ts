@@ -12,6 +12,7 @@ import {
   Post,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 
@@ -29,8 +30,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { FindResult } from '@app/common//rto/find-result';
 import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
 import { PostReportDto } from '@app/common//dto/gateway/social/post/post-report.dto';
+import { ActiveUser } from '@app/common//decorators/active-user-decorator';
+import { User } from '@app/common//entities/user/user-entity';
+import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
+import { PostGatewayRto } from '@app/common//rto/gateway/social/post/post-gateway.rto';
 
 @Controller('social')
+@UseGuards(JwtAuthGuard)
 export class PostController {
   private readonly logger = new Logger(PostController.name);
 
@@ -40,7 +46,8 @@ export class PostController {
   ) {}
 
   @Get('test')
-  test(): { message: string } {
+  test(@ActiveUser() user: User): { message: string } {
+    console.log('User:', user);
     return { message: 'Hello from PostController!' };
   }
 
@@ -48,21 +55,23 @@ export class PostController {
   @UseInterceptors(FilesInterceptor('files'))
   async create(
     @Body() body: CreatePostGatewayDto,
+    @ActiveUser() user: User,
     @UploadedFiles() files?: Express.Multer.File[],
-  ): Promise<PostRto> {
+  ): Promise<PostGatewayRto> {
     const uploadResult =
       files && (await this.storageService.uploadMultipleFiles(files));
-    const userId = uuidv4();
-
+    console.log('userId', user);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const post = CreatePostDto.fromCreate(body, uploadResult, userId);
+    const post = CreatePostDto.fromCreate(body, uploadResult);
 
     const response = await this.networking.send<PostRto>(
       `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.CREATE}`,
       post,
     );
 
-    return response;
+    const result = PostGatewayRto.fromEntity(response, user);
+
+    return result;
   }
 
   @Patch('posts/:id')
