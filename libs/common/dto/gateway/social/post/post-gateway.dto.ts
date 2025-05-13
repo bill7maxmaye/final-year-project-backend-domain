@@ -1,10 +1,4 @@
-import {
-  IsArray,
-  IsMongoId,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export class FileUploadDto {
   @IsString()
@@ -32,7 +26,7 @@ export class CreatePostGatewayDto {
   readonly title: string;
 
   @IsOptional()
-  readonly content?: string;
+  readonly content: string;
 
   @IsOptional()
   @IsArray()

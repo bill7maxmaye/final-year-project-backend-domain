@@ -6,11 +6,13 @@ import { ConfigModule } from '@nestjs/config';
 import { PostController } from './post/post.controller';
 
 import { PostService } from './post/post.service';
+import { CommentService } from './comment/comment.service';
+import { CommentController } from './comment/comment.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
-  controllers: [SocialController, PostController],
-  providers: [SocialService, PostService],
+  controllers: [SocialController, PostController, CommentController],
+  providers: [SocialService, PostService, CommentService],
   exports: [],
 })
 export class SocialModule {}

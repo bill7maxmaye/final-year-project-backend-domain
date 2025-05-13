@@ -18,6 +18,9 @@ export enum ACTION {
   REMOVE_SECONDARY_EMAIL = 'remove-secondary-email',
   RETRIEVE_PROFILE_VIEW_MAP = 'retrieve-profile-view-map',
   UPDATE_PREFERENCES = 'update-preferences',
+  GET_ALL = 'get-all',
+  GET_BY_ID = 'get-by-id',
+  REPORT = 'report',
 
   // 2. Social Posts
   CREATE_POST = 'create-post',
@@ -103,7 +106,10 @@ export enum ACTION {
   // Generic Actions (Can be used across multiple controllers)
   CREATE = 'create',
   RETRIEVE = 'retrieve',
+  RETRIEVE_ALL = 'retrieve-all',
   UPDATE = 'update',
   DELETE = 'delete',
   LIST_ALL = 'list-all',
+  LIKE = 'like',
+  UNLIKE = 'unlike',
 }
