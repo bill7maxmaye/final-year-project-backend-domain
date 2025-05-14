@@ -15,6 +15,7 @@ import s3StorageConfig from '@app/common//config/s3-storage.config';
 import { ReelController } from './controllers/reel/reel.controller';
 import { ReelService } from './controllers/reel/reel.service';
 import databaseConfig from '@app/common//config/database.config';
+import { CommentController } from './controllers/reel/comment/comment.controller';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import databaseConfig from '@app/common//config/database.config';
     // SocialController,
     PostController,
     ReelController,
+    CommentController,
   ],
   providers: [AppService, SocialService, PostService, ReelService, s3Provider],
 })

@@ -18,6 +18,11 @@ export enum CONTROLLER {
   // 3. Reels (Short Videos)
   REELS = 'reels',
   TRENDING_REELS = 'trending-reels',
+  REEL_COMMENTS = 'reel-comments',
+  REEL_REACTIONS = 'reel-reactions',
+  REEL_SAVED_POSTS = 'reel-saved-posts',
+  REEL_HIDDEN_POSTS = 'reel-hidden-posts',
+  REEL_HASHTAGS = 'reel_hashtags',
 
   // 4. Gifting System
   GIFTS = 'gifts',
@@ -64,4 +69,6 @@ export enum CONTROLLER {
   IMAGES = 'images',
   VIDEOS = 'videos',
   STORAGE = 'storage',
+
+  LIKES = 'likes',
 }

@@ -31,9 +31,10 @@ export class AppController {
     private readonly storageService: StorageService,
   ) {}
 
-  @Get('/')
+  @Get('/test')
   test() {
-    return 'Hello World';
+    this.logger.log('Test');
+    return 'Test from mobile';
   }
 
   @Post('upload')

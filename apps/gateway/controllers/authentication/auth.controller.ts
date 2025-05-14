@@ -33,8 +33,6 @@ export class AuthenticationController {
     console.log('📤 Publishing user.registered event:', createUserDto);
 
     this.networking.emit(
-      // MICROSERVICE_QUEUE.AUTHENTICATION,
-
       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.LOGIN}`,
       createUserDto,
     );

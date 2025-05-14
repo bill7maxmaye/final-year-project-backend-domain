@@ -13,13 +13,47 @@ export class StorageService {
 
   async uploadFile(file: Express.Multer.File) {
     this.logger.log('uploading file ', file);
-    const { originalname } = file;
+    const { originalname, mimetype, buffer } = file;
+
+    let finalMimeType = mimetype;
+
+    if (
+      mimetype === 'application/octet-stream' &&
+      originalname &&
+      originalname.toLowerCase().endsWith('.mp4')
+    ) {
+      this.logger.warn(
+        `Mimetype is generic (${mimetype}), overriding to video/mp4 based on extension for ${originalname}.`,
+      );
+      finalMimeType = 'video/mp4';
+    } else if (mimetype.startsWith('video/')) {
+      // Already correctly identified as a video
+      this.logger.debug(
+        `Mimetype correctly identified as video: ${mimetype} for ${originalname}`,
+      );
+      finalMimeType = mimetype; // Use the detected video mimetype
+    } else {
+      // Handle other file types or potentially log a warning
+      this.logger.warn(
+        `Unexpected or non-video mimetype detected: ${mimetype} for ${originalname}`,
+      );
+      // You might want to throw an error or handle this differently if only videos are allowed
+      finalMimeType = mimetype; // Use the detected mimetype (might still be application/octet-stream if not video)
+    }
+    // --- End of Workaround ---
+
+    // Add a check if finalMimeType is still application/octet-stream here if you want to reject it
+    if (finalMimeType === 'application/octet-stream') {
+      this.logger.error(
+        `Cannot determine proper mimetype for ${originalname}, defaulting to application/octet-stream`,
+      );
+    }
 
     return await this.s3_upload(
-      file.buffer,
+      buffer,
       AWS_S3_BUCKET,
       originalname,
-      file.mimetype,
+      finalMimeType,
     );
   }
 

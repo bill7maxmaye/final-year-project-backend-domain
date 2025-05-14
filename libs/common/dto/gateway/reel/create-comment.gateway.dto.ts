@@ -1,4 +1,3 @@
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
 import { IsNotEmpty, IsString, IsOptional, IsArray } from 'class-validator';
 
 export class CreateCommentGatewayDto {
@@ -8,15 +7,7 @@ export class CreateCommentGatewayDto {
 
   @IsNotEmpty()
   @IsString()
-  ownerId: string;
-
-  @IsNotEmpty()
-  @IsString()
-  targetId: string;
-
-  @IsNotEmpty()
-  @IsString()
-  onModel: string;
+  reelId: string;
 
   @IsOptional()
   @IsString()
@@ -25,5 +16,5 @@ export class CreateCommentGatewayDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  mentionedUsers?: MentionedUser[];
+  mentionedUserIds?: string[];
 }

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ReelController } from './reel/reel.controller';
+import { ReelController } from './reel.index.controller';
 import { ReelService } from './reel/reel.service';
 import { ReelDocument, ReelSchema } from '@app/common//models/reel/reel.model';
 import {
@@ -17,6 +17,10 @@ import { CommentService } from './comment/comment.service';
 import { ConfigModule } from '@nestjs/config';
 import databaseConfig from '@app/common//config/database.config';
 import { ReelsRepository } from './reel/reel.repository';
+import { CommentsRepository } from './comment/comment.repository';
+import { LikeRepository } from './like/like.repository';
+import { LikeService } from './like/like.service';
+import { NetworkingModule } from '@pp/networking';
 
 @Module({
   imports: [
@@ -30,8 +34,16 @@ import { ReelsRepository } from './reel/reel.repository';
       { name: GiftTransactionDocument.name, schema: GiftTransactionSchema },
       { name: LikeDocument.name, schema: LikeSchema },
     ]),
+    NetworkingModule,
   ],
   controllers: [ReelController, CommentController],
-  providers: [ReelService, CommentService, ReelsRepository],
+  providers: [
+    ReelService,
+    CommentService,
+    LikeService,
+    LikeRepository,
+    ReelsRepository,
+    CommentsRepository,
+  ],
 })
 export class ReelModule {}
