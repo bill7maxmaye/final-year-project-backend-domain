@@ -11,18 +11,22 @@ import {
   Delete,
   Query,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from './app.service';
 import { StorageService } from './storage/storage.service';
+import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
+import { User } from '@app/common//entities/user/user-entity';
+import { ActiveUser } from '@app/common//decorators/active-user-decorator';
 
 interface UploadRequestDto {
   title: string;
   description: string;
   // other text fields
 }
-
 @Controller()
+@UseGuards(JwtAuthGuard)
 export class AppController {
   private readonly logger = new Logger(AppController.name);
 
@@ -31,10 +35,10 @@ export class AppController {
     private readonly storageService: StorageService,
   ) {}
 
-  @Get('/test')
-  test() {
-    this.logger.log('Test');
-    return 'Test from mobile';
+  @Get('/')
+  test(@ActiveUser() user: User) {
+    console.log('User:', user);
+    return 'Hello World';
   }
 
   @Post('upload')
