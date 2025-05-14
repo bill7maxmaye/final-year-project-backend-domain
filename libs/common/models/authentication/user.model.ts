@@ -31,8 +31,14 @@ export class UserDocument extends BaseDocument {
   @Prop({ type: String })
   gender?: string;
 
-  @Prop({ type: String, default: '' })
-  profilePic: string;
+  @Prop({ type: String })
+  profilePic?: string;
+
+  @Prop({ type: [String], default: [] })
+  following: string[];
+
+  @Prop({ type: [String], default: [] })
+  followers: string[];
 
   @Prop({ type: Date })
   lastLogin: Date;
