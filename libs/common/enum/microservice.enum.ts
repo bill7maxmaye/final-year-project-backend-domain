@@ -9,4 +9,5 @@ export enum MICROSERVICE {
   SEARCH = 'search',
   MESSAGING = 'messaging',
   MONETIZATION = 'monetization',
+  CHAT = 'chat',
 }

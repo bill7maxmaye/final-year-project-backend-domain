@@ -4,7 +4,9 @@ import { ClientProxy } from '@nestjs/microservices';
 // Import unique tokens
 import {
   AUTHENTICATION_RMQ_CLIENT,
+  NOTIFICATION_RMQ_CLIENT,
   REELS_RMQ_CLIENT,
+  CHAT_RMQ_CLIENT,
 } from 'libs/common/constant/microservice-client-tokens.constant';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum'; // Import MICROSERVICE enum
 import { lastValueFrom } from 'rxjs';
@@ -18,12 +20,16 @@ export class NetworkingService {
     // Inject clients using their unique tokens
     @Inject(AUTHENTICATION_RMQ_CLIENT) private readonly authClient: ClientProxy,
     @Inject(REELS_RMQ_CLIENT) private readonly reelsClient: ClientProxy,
+    @Inject(CHAT_RMQ_CLIENT) private readonly chatClient: ClientProxy,
+    @Inject(NOTIFICATION_RMQ_CLIENT)
+    private readonly notificationClient: ClientProxy,
     // Add other clients here
   ) {
     // Map microservice enums to their respective clients
     this.clients = new Map<MICROSERVICE, ClientProxy>([
       [MICROSERVICE.AUTHENTICATION, this.authClient],
       [MICROSERVICE.REELS, this.reelsClient],
+      [MICROSERVICE.NOTIFICATION, this.notificationClient],
       // Add other mappings
     ]);
   }

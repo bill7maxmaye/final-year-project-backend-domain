@@ -28,7 +28,7 @@ export class SocketGateway
   constructor(private readonly networking: NetworkingService) {}
 
   afterInit(server: Server) {
-    this.logger.log('SocketGateway Initialized', server);
+    this.logger.log('SocketGateway Initialized' );
   }
 
   handleConnection(client: Socket, ...args: any[]) {

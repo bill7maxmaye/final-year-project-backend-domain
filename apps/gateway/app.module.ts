@@ -15,6 +15,9 @@ import s3StorageConfig from '@app/common//config/s3-storage.config';
 import { ReelController } from './controllers/reel/reel.controller';
 import { ReelService } from './controllers/reel/reel.service';
 import databaseConfig from '@app/common//config/database.config';
+import { SocketModule } from './websocket/socket.module';
+// import { NotificationsModule } from 'apps/notificationnn/notification.module';
+import { NotificationsController } from './controllers/notification/notification.controller';
 
 @Module({
   imports: [
@@ -24,6 +27,8 @@ import databaseConfig from '@app/common//config/database.config';
     }),
     NetworkingModule,
     StorageModule,
+    SocketModule,
+    // NotificationsModule,
   ],
   controllers: [
     AppController,
@@ -31,6 +36,7 @@ import databaseConfig from '@app/common//config/database.config';
     // SocialController,
     PostController,
     ReelController,
+    NotificationsController,
   ],
   providers: [AppService, SocialService, PostService, ReelService, s3Provider],
 })

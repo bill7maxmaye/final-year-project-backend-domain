@@ -9,4 +9,6 @@ export enum MICROSERVICE_QUEUE {
   SEARCH = 'search_queue',
   MESSAGING = 'messaging_queue',
   MONETIZATION = 'monetization_queue',
+
+  CHAT = 'chat_queue',
 }
