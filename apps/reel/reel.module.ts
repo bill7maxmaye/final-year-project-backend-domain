@@ -12,7 +12,6 @@ import {
 } from '@app/common//models/reel/gift-transaction.model';
 import { LikeDocument, LikeSchema } from '@app/common//models/reel/like.model';
 import { DatabaseModule } from '@app/common//database/database.module';
-import { CommentController } from 'apps/gateway/controllers/reel/comment/comment.controller';
 import { CommentService } from './comment/comment.service';
 import { ConfigModule } from '@nestjs/config';
 import databaseConfig from '@app/common//config/database.config';
@@ -21,6 +20,12 @@ import { CommentsRepository } from './comment/comment.repository';
 import { LikeRepository } from './like/like.repository';
 import { LikeService } from './like/like.service';
 import { NetworkingModule } from '@pp/networking';
+import {
+  ReportDocument,
+  ReportSchema,
+} from '@app/common//models/reel/report.model';
+import { ReportsRepository } from './report/report.repository';
+import { ReportService } from './report/report.service';
 
 @Module({
   imports: [
@@ -33,15 +38,18 @@ import { NetworkingModule } from '@pp/networking';
       { name: CommentDocument.name, schema: CommentSchema },
       { name: GiftTransactionDocument.name, schema: GiftTransactionSchema },
       { name: LikeDocument.name, schema: LikeSchema },
+      { name: ReportDocument.name, schema: ReportSchema },
     ]),
     NetworkingModule,
   ],
-  controllers: [ReelController, CommentController],
+  controllers: [ReelController],
   providers: [
     ReelService,
     CommentService,
     LikeService,
     LikeRepository,
+    ReportService,
+    ReportsRepository,
     ReelsRepository,
     CommentsRepository,
   ],

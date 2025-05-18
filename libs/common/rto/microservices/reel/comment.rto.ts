@@ -1,57 +1,64 @@
-// --- CommentRto (app/api/reel/dto/comment.rto.ts) --- // Assuming a typical location for RTOs
+import { Comment } from '@app/common//entities/reel/comment.entity';
 
-import { Comment } from '@app/common//entities/reel/comment.entity'; // Assuming this path
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity'; // Assuming this path
-
-// This RTO represents the structure of a Comment object returned to the client.
-// It maps from the Comment entity structure (which includes reelId and parentCommentId).
 export class CommentRto {
   constructor(
     public id: string,
     public content: string,
-    public ownerId: string, // The ID of the user who created the comment
-    public reelId: string, // NEW: The ID of the top-level Reel this comment belongs to
-    public parentCommentId: string | null, // The ID of the parent comment if it's a reply
-    public mentionedUsers: MentionedUser[], // Array of MentionedUser entities
-    public likes: number,
-    public createdAt: string, // Sending dates as ISO strings is standard practice
-    public updatedAt: string, // Sending dates as ISO strings is standard practice
-  ) {
-    // No super call needed as this does not extend BaseEntity
-  }
+    public ownerId: string,
+    public reelId: string,
+    public parentCommentId: string | null,
+    public mentionedUsers: string[], // Assuming this is an array of user IDs mentioned in the comment
+    public likes: number, // Total like count for this comment
+    public createdAt: string,
+    public updatedAt: string,
+    public isLiked: boolean, // True if the current user has liked this comment
+    public reelCommentCount: number, // Total comment count for the reel this comment belongs to
+    // ------------------------------
+  ) {}
 
   /**
-   * Maps an application Comment entity to a CommentRto.
-   * @param entity The Comment entity instance.
-   * @returns A CommentRto instance for API response.
+   * Creates a CommentRto from a Comment entity, checking against a set of liked comment IDs and including the reel's total comment count.
+   * @param entity The Comment entity from the database.
+   * @param likedCommentIds A Set containing the IDs of comments liked by the current user. Pass an empty Set or null/undefined if the user is not logged in.
+   * @param reelCommentCount The total number of comments for the reel this comment belongs to. This value must be fetched separately.
+   * @returns The CommentRto representing the comment.
    */
-  static fromEntity(entity: Comment): CommentRto {
-    // Ensure the entity has reelId based on the updated entity structure
+  static fromEntity(
+    entity: Comment,
+    reelCommentCount: number, // <--- Added parameter
+    likedCommentIds?: Set<string> | null,
+  ): CommentRto {
     if (!entity.reelId) {
-      // This should ideally not happen if the entity is correctly mapped from the DB
-      throw new Error('Comment entity is missing reelId field');
+      console.warn(`Comment entity ${entity.id} is missing reelId field`);
+      throw new Error(`Comment entity ${entity.id} is missing reelId field`);
     }
+
+    // Logic to determine isLiked based on input Set
+    const isLikedByUser =
+      likedCommentIds != null && likedCommentIds.has(entity.id);
 
     return new CommentRto(
       entity.id,
       entity.content,
       entity.ownerId,
-      entity.reelId, // Map from entity.reelId (new field)
-      entity.parentCommentId, // Map from entity.parentCommentId
-      entity.mentionedUsers, // Map directly from the entity's mentionedUsers array
+      entity.reelId,
+      entity.parentCommentId,
+      entity.mentionedUserIds,
       entity.likes,
-      entity.createdAt.toISOString(), // Convert Date object to ISO string
-      entity.updatedAt.toISOString(), // Convert Date object to ISO string
+      entity.createdAt.toISOString(),
+      entity.updatedAt.toISOString(),
+      isLikedByUser,
+      reelCommentCount,
     );
   }
 
-  /**
-   * Maps an array of application Comment entities to an array of CommentRtos.
-   * @param entities An array of Comment entity instances.
-   * @returns An array of CommentRto instances for API response.
-   */
-  static fromEntities(entities: Comment[]): CommentRto[] {
-    // Filter out any null/undefined entities if necessary, though typically not needed
-    return entities.map((entity) => CommentRto.fromEntity(entity));
+  static fromEntities(
+    entities: Comment[],
+    reelCommentCount: number,
+    likedCommentIds?: Set<string> | null,
+  ): CommentRto[] {
+    return entities.map((entity) =>
+      CommentRto.fromEntity(entity, reelCommentCount, likedCommentIds),
+    );
   }
 }

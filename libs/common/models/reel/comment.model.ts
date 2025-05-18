@@ -16,8 +16,8 @@ export class CommentDocument extends BaseDocument {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Comment' })
   parentCommentId?: Types.ObjectId;
 
-  @Prop({ default: [] })
-  mentionedUsers: [];
+  @Prop({ type: [String], default: [] })
+  mentionedUserIds: string[];
 
   @Prop({ type: Number, default: 0 })
   likes: number;

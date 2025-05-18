@@ -10,14 +10,17 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
-  HttpException, // Import HttpException
-  HttpStatus, // Import HttpStatus
+  HttpException,
+  HttpStatus,
+  UseGuards,
+  BadRequestException,
+  ParseIntPipe,
+  ParseIntPipeOptions,
 } from '@nestjs/common';
 import { ReelService } from './reel.service';
 import { CreateReelGatewayDto } from '@app/common//dto/gateway/reel/create-reel.gateway.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from 'apps/gateway/storage/storage.service';
-import { v4 as uuidv4 } from 'uuid';
 import { CreateReelDto } from '@app/common//dto/microservices/reel/create-reel.dto';
 import { NetworkingService } from '@pp/networking';
 import { ReelRto } from '@app/common//rto/microservices/reel/reel.rto';
@@ -29,8 +32,20 @@ import { UpdateReelDto } from '@app/common//dto/microservices/reel/update-reel.d
 import { PaginationOptions } from '@app/common//dto/interface/pagination-options.interface';
 import { CreateLikeGatewayDto } from '@app/common//dto/gateway/reel/create-like.gateway.dto';
 import { CreateLikeDto } from '@app/common//dto/microservices/reel/create-like.dto';
-import { LikeReelResponse } from '@app/common//dto/interface/like.interface';
+import { CreateReportGatewayDto } from '@app/common//dto/gateway/reel/create-report.gateway.dto';
+import { ReportRto } from '@app/common//rto/microservices/reel/report.rto';
+import { CreateReportDto } from '@app/common//dto/microservices/reel/create-report.dto';
+import { UpdateReportGatewayDto } from '@app/common//dto/gateway/reel/update-report.gateway.dto';
+import { UpdateReportDto } from '@app/common//dto/microservices/reel/update-report.dto';
+import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
+import { ActiveUser } from '@app/common//decorators/active-user-decorator';
+import { User } from '@app/common//entities/user/user-entity';
+import { ReportedEntityType } from '@app/common//enum/reel/reported-entity-type.enum';
+import { ReelGatewayRto } from '@app/common//rto/gateway/reel/reel-gateway.rto';
+import { SuccessRto } from '@app/common//rto/success.rto';
+import { LikeResponseRTO } from '@app/common//rto/microservices/reel/like-response.rto';
 @Controller('reel')
+@UseGuards(JwtAuthGuard)
 export class ReelController {
   private readonly logger = new Logger(ReelController.name);
 
@@ -43,6 +58,7 @@ export class ReelController {
   @Post()
   @UseInterceptors(FileInterceptor('videoFile'))
   async create(
+    @ActiveUser() user: User,
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateReelGatewayDto,
   ) {
@@ -56,22 +72,19 @@ export class ReelController {
     }
 
     try {
-      // 1. Upload the file to S3 (metadata like Content-Type, Content-Disposition: inline is set here)
       const uploadResult = await this.storageService.uploadFile(file);
       this.logger.debug(`S3 Upload Result: ${JSON.stringify(uploadResult)}`);
 
-      // 2. Generate a signed URL for the uploaded file using the Key
       const fileSignedUrl = await this.storageService.downloadFile(
         uploadResult.Key,
-      ); // Use downloadFile to get the signed URL
+      );
 
-      // 3. Create the Reel object for the microservice
-      // Use the S3 Key and the signed URL in the reel data
-      const userId = uuidv4(); // Replace with actual user ID logic
+      const userId = user.id;
+
       const reel = CreateReelDto.fromGateway(
         userId,
         body,
-        uploadResult.Location, // Store the signed URL or the S3 Key/Location depending on microservice needs
+        uploadResult.Location,
         uploadResult.Key,
       );
 
@@ -79,26 +92,23 @@ export class ReelController {
         `Creating reel microservice payload: ${JSON.stringify(reel)}`,
       );
 
-      // 4. Send data to the reel microservice
       const response = await this.networking.send<ReelRto>(
         `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.CREATE}`,
         reel,
       );
 
-      // 5. Return success response with details
       return {
         message: 'Reel Created successfully',
         fileInfo: {
           bucket: uploadResult.Bucket,
           key: uploadResult.Key,
-          location: uploadResult.Location, // Still include the direct location for info if needed
-          signedUrl: fileSignedUrl, // Include the signed URL to be used for playback
+          location: uploadResult.Location,
+          signedUrl: fileSignedUrl,
         },
         reel: response,
       };
     } catch (error) {
       this.logger.error('Error during reel creation and upload:', error);
-      // Re-throw or handle the error appropriately
       throw new HttpException(
         'Failed to create reel',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -130,36 +140,49 @@ export class ReelController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Param('id') id: string): Promise<SuccessRto> {
     this.logger.log(`Received request to delete reel with id: ${id}`);
 
-    // You might want to add logic here to first get the reel details
-    // from the microservice to retrieve the S3 Key, and then delete
-    // the file from S3 using storageService.deleteFile() before
-    // sending the delete command to the microservice.
-    // Example:
-    // const reelToDelete = await this.networking.send<ReelRto>(`${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET}`, id);
-    // if (reelToDelete && reelToDelete.s3Key) { // Assuming reelToDelete has an s3Key property
-    //     try {
-    //         await this.storageService.deleteFile(reelToDelete.s3Key);
-    //         this.logger.log(`Deleted S3 file: ${reelToDelete.s3Key}`);
-    //     } catch (s3Error) {
-    //         this.logger.error(`Failed to delete S3 file ${reelToDelete.s3Key}:`, s3Error);
-    //         // Decide how to handle S3 deletion failure (e.g., log and continue, or throw)
-    //     }
-    // }
+    try {
+      const reelKey = await this.networking.send<string>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.DELETE}`,
+        id,
+      );
 
-    await this.networking.send<void>(
-      `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.DELETE}`,
-      id,
-    );
+      if (reelKey) {
+        try {
+          await this.storageService.deleteFile(reelKey);
+          this.logger.log(`Deleted S3 file: ${reelKey}`);
+        } catch (s3Error) {
+          this.logger.error(`Failed to delete S3 file ${reelKey}:`, s3Error);
+          // Decide how to handle S3 deletion failure (e.g., log and continue, or throw)
+          // For example, you could throw the error to stop the process if S3 deletion is critical:
+          // throw new Error(`Failed to delete S3 file: ${reelToDelete.s3Key}.  Error: ${s3Error}`);
+
+          // OR you could log and continue, depending on your requirements.
+        }
+      }
+
+      return new SuccessRto();
+    } catch (error) {
+      this.logger.error(`Error deleting reel with id: ${id}`, error);
+      // Handle the error appropriately.  This might involve throwing an exception,
+      // returning a specific error response, or logging and retrying.
+
+      // Example: Throwing a custom error:
+      throw new Error(`Failed to delete reel with id: ${id}. Error: ${error}`);
+
+      // Or, return a specific error response:
+      // return { success: false, message: 'Failed to delete reel' };
+    }
   }
 
-  @Get('many') // Use Get for query parameters
+  @Get('many')
   async getMany(
-    @Query('page') page: string, // Query parameters are always strings
+    @ActiveUser() user: User,
+    @Query('page') page: string,
     @Query('limit') limit: string,
-  ): Promise<ReelRto[]> {
+  ): Promise<ReelGatewayRto[]> {
     const parsedPage = parseInt(page, 10);
     const parsedLimit = parseInt(limit, 10);
 
@@ -186,7 +209,7 @@ export class ReelController {
 
     const reels = await this.networking.send<ReelRto[]>(
       `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_MANY}`,
-      paginationOptions,
+      { paginationOptions: paginationOptions, userid: user.id },
     );
 
     // Optional: If the microservice only returns S3 Keys,
@@ -205,7 +228,90 @@ export class ReelController {
     //     }
     // }
 
-    return reels;
+    return this.reelService.populateReelList(reels);
+  }
+
+  @Get('after')
+  async getReelsCreatedAfter(
+    @ActiveUser() user: User,
+    @Query('createdAt') createdAtString: string,
+    @Query('limit', new ParseIntPipe({ optional: true } as ParseIntPipeOptions))
+    limit?: number,
+  ): Promise<ReelGatewayRto[]> {
+    this.logger.log(
+      `Received request to get reels created after "${createdAtString}" with limit ${limit}`,
+    );
+
+    // --- START: Date Parsing Logic ---
+    let processedDateString = createdAtString.trim(); // Trim whitespace from ends
+
+    // Attempt to correct a common non-standard format: space before offset (e.g., " 00:00")
+    // Replace the LAST space with a '+' if it precedes a potential HH:mm offset
+    // This is a targeted fix for the specific format shown in the error.
+    const lastSpaceIndex = processedDateString.lastIndexOf(' ');
+    if (
+      lastSpaceIndex > -1 &&
+      /^\d{2}:\d{2}$/.test(processedDateString.substring(lastSpaceIndex + 1))
+    ) {
+      processedDateString =
+        processedDateString.substring(0, lastSpaceIndex) +
+        '+' +
+        processedDateString.substring(lastSpaceIndex + 1);
+      this.logger.debug(
+        `Corrected date string by replacing last space with +: "${createdAtString}" -> "${processedDateString}"`,
+      );
+    } else {
+      // As a fallback, try replacing ANY space with a + sign.
+      // This is less precise but might help with variations.
+      // Note: This might incorrectly handle spaces within the date part if your input varies greatly.
+      const originalProcessed = processedDateString;
+      processedDateString = processedDateString.replace(/\s/g, '+');
+      if (originalProcessed !== processedDateString) {
+        this.logger.debug(
+          `Corrected date string by replacing all spaces with +: "${createdAtString}" -> "${processedDateString}"`,
+        );
+      }
+    }
+
+    const createdAt = new Date(processedDateString); // Attempt parsing with the corrected string
+
+    // Validate the parsed date
+    if (isNaN(createdAt.getTime())) {
+      this.logger.warn(
+        `Failed to parse date string even after correction: "${createdAtString}" -> "${processedDateString}"`,
+      );
+      throw new BadRequestException(
+        `Invalid date format provided for 'createdAt': ${createdAtString}. Expected ISO 8601 or similar.`,
+      );
+    }
+    this.logger.debug(
+      `Successfully parsed date string: "${createdAtString}" -> ${createdAt.toISOString()}`,
+    );
+    // --- END: Date Parsing Logic ---
+
+    try {
+      console.log('createdAt', createdAt);
+      const reelsRtos = await this.networking.send<ReelRto[]>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_CREATED_AFTER}`,
+        { createdAt: createdAt, limit, userid: user.id }, // Send the ISO string
+      );
+
+      // Populate the list of ReelRtos with gateway-specific data (like signed URLs)
+      return this.reelService.populateReelList(reelsRtos);
+    } catch (error) {
+      this.logger.error(
+        `Error handling get reels created after ${createdAtString}:`,
+        error,
+      );
+      // Map microservice errors to appropriate HTTP exceptions if needed
+      // For example, if the microservice throws NotFoundException, you might
+      // catch it here and throw a NestJS NotFoundException.
+      // Currently, it throws a generic 500 error for any microservice failure.
+      throw new HttpException(
+        'Failed to fetch reels',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get(':id')
@@ -234,12 +340,13 @@ export class ReelController {
 
   @Post('like')
   async reelLike(
+    @ActiveUser() user: User,
     @Body() body: CreateLikeGatewayDto,
-  ): Promise<LikeReelResponse> {
-    const userId = uuidv4(); // Replace with actual user ID logic
+  ): Promise<LikeResponseRTO> {
+    const userId = user.id;
     const updateReelDto = CreateLikeDto.fromGatewayRequest(userId, body);
 
-    const reel = await this.networking.send<LikeReelResponse>(
+    const reel = await this.networking.send<LikeResponseRTO>(
       `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.LIKE_REEL}`,
       updateReelDto,
     );
@@ -248,12 +355,13 @@ export class ReelController {
   }
 
   @Post('share/:reelId')
-  async shareReel(@Param('reelId') reelId: string): Promise<void> {
+  async shareReel(@Param('reelId') reelId: string): Promise<SuccessRto> {
     this.logger.log(`Received request to share reel with id: ${reelId}`);
-    await this.networking.send<void>(
+    const response = await this.networking.send<SuccessRto>(
       `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.SHARE_REEL}`,
       reelId,
     );
+    return response;
   }
 
   @Post('favorite/:reelId')
@@ -265,5 +373,123 @@ export class ReelController {
     );
   }
 
-  // ... uncommented comment routes remain as they were ...
+  @Post('report')
+  async createReport(
+    @ActiveUser() user: User,
+    @Body() createReportGatewayDto: CreateReportGatewayDto,
+  ): Promise<ReportRto> {
+    this.logger.log(
+      `Received request to create a report: ${JSON.stringify(createReportGatewayDto)}`,
+    );
+
+    try {
+      const reporterId = user.id;
+
+      const createReportDto = CreateReportDto.fromGatewayRequest(
+        reporterId,
+        createReportGatewayDto,
+      );
+
+      const report = await this.networking.send<ReportRto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.CREATE}`,
+        createReportDto,
+      );
+
+      return report;
+    } catch (error) {
+      this.logger.error('Error creating report:', error);
+      throw new HttpException(
+        'Failed to create report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('report/:id')
+  async getReport(@Param('id') id: string): Promise<ReportRto> {
+    this.logger.log(`Received request to get report with id: ${id}`);
+
+    try {
+      const report = await this.networking.send<ReportRto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.GET}`,
+        id,
+      );
+      return report;
+    } catch (error) {
+      this.logger.error(`Error getting report ${id}:`, error);
+      throw new HttpException(
+        'Failed to get report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get()
+  async getReportsByEntityId(
+    @Query('reportedEntityId') reportedEntityId: string,
+    @Query('reportedEntityType') reportedEntityType: ReportedEntityType,
+  ) {
+    try {
+      const report = await this.networking.send<ReportRto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.GET_REPORTS_BY_ENTITY}`,
+        {
+          reportedEntityType: reportedEntityType,
+          reportedEntityId: reportedEntityId,
+        },
+      );
+      return report;
+    } catch (error) {
+      this.logger.error(`Error getting report ${reportedEntityId}:`, error);
+      throw new HttpException(
+        'Failed to get report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Patch('report/:id')
+  async updateReport(
+    @Param('id') id: string,
+    @Body() updateReportGatewayDto: UpdateReportGatewayDto,
+  ): Promise<ReportRto> {
+    this.logger.log(`Received request to update report with id: ${id}`);
+
+    try {
+      const updateReportDto = UpdateReportDto.fromGatewayRequest(
+        id,
+        updateReportGatewayDto,
+      );
+
+      const report = await this.networking.send<ReportRto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.UPDATE}`,
+        updateReportDto,
+      );
+      return report;
+    } catch (error) {
+      this.logger.error(`Error updating report ${id}:`, error);
+      throw new HttpException(
+        'Failed to update report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Delete('report/:id')
+  async deleteReport(@Param('id') id: string): Promise<SuccessRto> {
+    this.logger.log(`Received request to delete report with id: ${id}`);
+
+    try {
+      const response = await this.networking.send<SuccessRto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.DELETE}`,
+        id,
+      );
+      return response;
+    } catch (error) {
+      this.logger.error(`Error deleting report ${id}:`, error);
+      throw new HttpException(
+        'Failed to delete report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

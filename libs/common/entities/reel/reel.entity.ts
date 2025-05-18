@@ -1,7 +1,6 @@
 import { BaseEntity } from '../base.entity';
 import { ReelPrivacy } from '../../enum/reel/reel-visibility.enum';
 import { ReelDocument } from '../../models/reel/reel.model';
-import { MentionedUser } from './mentioned-user.entity';
 
 export class Reel extends BaseEntity {
   constructor(
@@ -14,7 +13,7 @@ export class Reel extends BaseEntity {
     public isPremiumContent: boolean,
     public duration: number,
     public hashtags: string[],
-    public mentionedUsers: MentionedUser[],
+    public mentionedUsers: string[],
     public privacy: ReelPrivacy,
     public allowComments: boolean,
     public allowSaveToDevice: boolean,
@@ -31,7 +30,7 @@ export class Reel extends BaseEntity {
 
   static fromDocument(document: ReelDocument): Reel {
     return new Reel(
-      document.id,
+      document._id.toString(),
       document.createdAt,
       document.updatedAt,
       document.ownerId.toString(),
@@ -40,7 +39,7 @@ export class Reel extends BaseEntity {
       document.isPremiumContent,
       document.duration,
       document.hashtags,
-      MentionedUser.fromDocuments(document.mentionedUsers),
+      document.mentionedUserIds,
       document.privacy,
       document.allowComments,
       document.allowSaveToDevice,

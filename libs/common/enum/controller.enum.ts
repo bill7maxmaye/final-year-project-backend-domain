@@ -71,4 +71,5 @@ export enum CONTROLLER {
   STORAGE = 'storage',
 
   LIKES = 'likes',
+  REPORTS = 'reports',
 }

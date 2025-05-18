@@ -1,5 +1,5 @@
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
 import { Reel } from '@app/common//entities/reel/reel.entity';
+import { ReelPrivacy } from '@app/common//enum/reel/reel-visibility.enum';
 
 export class ReelRto {
   constructor(
@@ -10,8 +10,8 @@ export class ReelRto {
     public isPremiumContent: boolean,
     public duration: number,
     public hashtags: string[],
-    public mentionedUsers: MentionedUser[],
-    public privacy: string,
+    public mentionedUserIds: string[], // Assuming this is an array of user IDs mentioned in the description
+    public privacy: ReelPrivacy,
     public allowComments: boolean,
     public allowSaveToDevice: boolean,
     public saveWithWatermark: boolean,
@@ -22,9 +22,23 @@ export class ReelRto {
     public shareCount: number,
     public createdAt: string,
     public updatedAt: string,
+    // --- Add the new field here ---
+    public isLiked: boolean, // True if the current user has liked this reel
+    // ------------------------------
   ) {}
 
-  static fromEntity(entity: Reel): ReelRto {
+  /**
+   * Creates a ReelRto from a Reel entity, checking against a set of liked reel IDs.
+   * @param entity The Reel entity from the database.
+   * @param likedReelIds A Set containing the IDs of reels liked by the current user. Pass an empty Set or null/undefined if the user is not logged in.
+   * @returns The ReelRto representing the reel.
+   */
+  static fromEntity(entity: Reel, likedReelIds?: Set<string> | null): ReelRto {
+    // --- Logic to determine isLiked based on input Set ---
+    // Check if the likedReelIds Set is provided and if the entity's ID exists within it.
+    const isLikedByUser = likedReelIds != null && likedReelIds.has(entity.id);
+    // -----------------------------------------------------
+
     return new ReelRto(
       entity.id,
       entity.ownerId,
@@ -33,7 +47,7 @@ export class ReelRto {
       entity.isPremiumContent,
       entity.duration,
       entity.hashtags,
-      entity.mentionedUsers,
+      entity.mentionedUsers, // Assuming entity.mentionedUsers is already string[]
       entity.privacy,
       entity.allowComments,
       entity.allowSaveToDevice,
@@ -45,10 +59,23 @@ export class ReelRto {
       entity.shareCount,
       entity.createdAt.toISOString(),
       entity.updatedAt.toISOString(),
+      // --- Pass the calculated isLiked status ---
+      isLikedByUser,
+      // ------------------------------------------
     );
   }
 
-  static fromEntities(entities: Reel[]): ReelRto[] {
-    return entities.map((entity) => ReelRto.fromEntity(entity));
+  /**
+   * Creates an array of ReelRto from Reel entities, checking each against a set of liked reel IDs.
+   * @param entities The array of Reel entities.
+   * @param likedReelIds A Set containing the IDs of reels liked by the current user. Pass an empty Set or null/undefined if the user is not logged in.
+   * @returns An array of ReelRto.
+   */
+  static fromEntities(
+    entities: Reel[],
+    likedReelIds?: Set<string> | null,
+  ): ReelRto[] {
+    // Pass the likedReelIds Set down to the fromEntity method for each entity
+    return entities.map((entity) => ReelRto.fromEntity(entity, likedReelIds));
   }
 }

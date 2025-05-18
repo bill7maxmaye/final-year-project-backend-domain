@@ -1,3 +1,3 @@
-export interface LikeReelResponse {
+export interface LikeResponse {
   status: 'LIKED' | 'UNLIKED';
 }

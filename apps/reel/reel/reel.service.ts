@@ -5,7 +5,7 @@ import { Reel } from '@app/common//entities/reel/reel.entity';
 import { FilterQuery, Types, UpdateQuery } from 'mongoose';
 import { UpdateReelDto } from '@app/common//dto/microservices/reel/update-reel.dto';
 import { PaginationOptions } from '@app/common//dto/interface/pagination-options.interface';
-import { LikeReelResponse } from '@app/common//dto/interface/like.interface';
+import { LikeResponse } from '@app/common//dto/interface/like.interface';
 import { ReelDocument } from '@app/common//models/reel/reel.model';
 
 @Injectable()
@@ -17,6 +17,7 @@ export class ReelService {
       const reel = await this.reelRepository.create({
         ...createReelDto,
       });
+      console.log('reel', reel);
       return Reel.fromDocument(reel);
     } catch (error) {
       console.error('Error creating reel:', error);
@@ -65,15 +66,16 @@ export class ReelService {
     }
   }
 
-  async deleteReel(id: string): Promise<void> {
+  async deleteReel(id: string): Promise<string> {
     try {
-      const result = await this.reelRepository.deleteOne({
+      const result = await this.reelRepository.findOneAndDelete({
         _id: new Types.ObjectId(id),
       });
 
       if (!result) {
         throw new NotFoundException(`Reel with ID "${id}" not found`);
       }
+      return result.key;
     } catch (error) {
       if (error instanceof Types.ObjectId) {
         throw new NotFoundException(`Invalid Reel ID "${id}"`);
@@ -106,27 +108,53 @@ export class ReelService {
     }
   }
 
-  async likeReel(reelId: string, likeStatus: LikeReelResponse): Promise<void> {
+  async likeReel(reelId: string, likeStatus: LikeResponse): Promise<number> {
+    // Changed return type to Promise<number>
     let objectIdReel: Types.ObjectId;
     try {
+      // Attempt to convert the string ID to ObjectId
       objectIdReel = new Types.ObjectId(reelId);
     } catch (error) {
-      throw new NotFoundException(`Invalid Reel ID format "${error}"`);
+      // Catch error if the string format is invalid for ObjectId
+      throw new NotFoundException(
+        `Invalid Reel ID format "${reelId} ${error}"`,
+      ); // Use reelId in error message
     }
 
+    // Determine whether to increment or decrement the like count
     const incrementValue = likeStatus.status === 'LIKED' ? 1 : -1;
 
+    // Define the update operation using Mongoose $inc operator
     const updateOperation: UpdateQuery<ReelDocument> = {
       $inc: { likes: incrementValue },
     };
 
     try {
-      await this.reelRepository.updateOneAndRetrieve(
-        { _id: objectIdReel },
-        updateOperation,
-      );
+      // Use the repository method to find the reel, update its like count, and retrieve the updated document
+      const updatedReelDocument =
+        await this.reelRepository.updateOneAndRetrieve(
+          { _id: objectIdReel },
+          updateOperation,
+        );
+
+      // Check if the document was found and updated.
+      // updateOneAndRetrieve should ideally return the document if found/updated, null otherwise.
+      if (!updatedReelDocument) {
+        throw new NotFoundException(
+          `Reel with ID "${reelId}" not found or could not be updated`,
+        );
+      }
+
+      // Return the new like count from the updated document
+      return updatedReelDocument.likes;
     } catch (error) {
+      // Re-throw the NotFoundException if it originated from the check above
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      // Log other potential errors from the database operation
       console.error(`Error updating like count for reel ${reelId}:`, error);
+      // Re-throw the error (consider using a more specific NestJS exception like InternalServerErrorException)
       throw error;
     }
   }
@@ -177,50 +205,115 @@ export class ReelService {
     }
   }
 
-  async incrementCommentCount(reelId: string): Promise<void> {
+  async incrementCommentCount(reelId: string): Promise<number> {
+    // Changed return type
     let objectIdReel: Types.ObjectId;
     try {
       objectIdReel = new Types.ObjectId(reelId);
     } catch (error) {
-      throw new NotFoundException(`Invalid Reel ID format "${error}"`);
+      throw new NotFoundException(
+        `Invalid Reel ID format "${reelId} ${error}"`,
+      ); // Used reelId for clarity
     }
 
-    console.log(objectIdReel);
+    console.log('objectIdReel', objectIdReel);
 
     const updateOperation: UpdateQuery<ReelDocument> = {
-      $inc: { commentCount: 1 },
+      $inc: { comments: 1 },
     };
 
     try {
-      await this.reelRepository.updateOneAndRetrieve(
-        { _id: objectIdReel },
-        updateOperation,
-      );
+      const updatedReelDocument =
+        await this.reelRepository.updateOneAndRetrieve(
+          { _id: objectIdReel },
+          updateOperation,
+        );
+
+      // Check if the document was found and updated
+      if (!updatedReelDocument) {
+        throw new NotFoundException(
+          `Reel with ID "${reelId}" not found or could not be updated`,
+        );
+      }
+
+      // Return the new comment count
+      return updatedReelDocument.comments;
     } catch (error) {
+      // Re-throw the NotFoundException if it originated from the check above
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       console.error(`Error updating comment count for reel ${reelId}:`, error);
       throw error;
     }
   }
 
-  async decrementCommentCount(reelId: string): Promise<void> {
+  // --- MODIFIED METHOD ---
+  async decrementCommentCount(reelId: string): Promise<number> {
+    // Changed return type
     let objectIdReel: Types.ObjectId;
     try {
       objectIdReel = new Types.ObjectId(reelId);
     } catch (error) {
-      throw new NotFoundException(`Invalid Reel ID format "${error}"`);
+      throw new NotFoundException(
+        `Invalid Reel ID format "${reelId} ${error}"`,
+      ); // Used reelId for clarity
     }
 
     const updateOperation: UpdateQuery<ReelDocument> = {
-      $inc: { commentCount: -1 },
+      $inc: { comments: -1 },
     };
 
     try {
-      await this.reelRepository.updateOneAndRetrieve(
-        { _id: objectIdReel },
-        updateOperation,
-      );
+      const updatedReelDocument =
+        await this.reelRepository.updateOneAndRetrieve(
+          { _id: objectIdReel },
+          updateOperation,
+        );
+
+      // Check if the document was found and updated
+      if (!updatedReelDocument) {
+        throw new NotFoundException(
+          `Reel with ID "${reelId}" not found or could not be updated`,
+        );
+      }
+
+      // Return the new comment count
+      return updatedReelDocument.comments;
     } catch (error) {
+      // Re-throw the NotFoundException if it originated from the check above
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       console.error(`Error updating comment count for reel ${reelId}:`, error);
+      throw error;
+    }
+  }
+
+  async getReelsCreatedAfter(
+    createdAt: Date,
+    limit: number = 2,
+  ): Promise<Reel[]> {
+    try {
+      // if (isNaN(createdAt.getTime())) {
+      //   throw new Error('Invalid date provided for getReelsCreatedAfter');
+      // }
+
+      console.log('am here');
+
+      const filterQuery: FilterQuery<ReelDocument> = {
+        createdAt: { $gt: createdAt },
+      };
+
+      const reels = await this.reelRepository
+        .find(filterQuery)
+        .sort({ createdAt: 1 })
+        .limit(limit)
+        .exec();
+
+      return Reel.fromDocuments(reels);
+    } catch (error: any) {
+      console.error(`Error fetching reels created after `, error);
       throw error;
     }
   }
