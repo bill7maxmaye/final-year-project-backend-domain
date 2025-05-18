@@ -115,4 +115,21 @@ export abstract class BaseRepository<TDocument extends BaseDocument> {
 
     return updated as TDocument;
   }
+
+  async updateMany(
+    filter: FilterQuery<TDocument>,
+    updates: UpdateQuery<TDocument>,
+    options: MongooseUpdateQueryOptions<TDocument> = {},
+  ): Promise<number> {
+    const result = await this.model.updateMany(filter, updates, options).exec();
+
+    if (result.modifiedCount === 0) {
+      this.logger.warn(
+        `No documents were updated with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
+    return result.modifiedCount;
+  }
+
 }

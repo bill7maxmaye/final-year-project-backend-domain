@@ -21,6 +21,6 @@ export class ChatController {
 
     this.socketGateway.server.emit('message', res);
 
-    return 'fuck you';
+    return '- - send message - -';
   }
 }

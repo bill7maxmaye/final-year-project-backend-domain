@@ -25,7 +25,7 @@ export class Notification extends BaseEntity {
       document.senders.map((sender) => sender.toString()),
       document.entityIds.map((entityId) => entityId.toString()),
       document.message,
-      document.type,
+      document.type as NotificationType,
     );
   }
 

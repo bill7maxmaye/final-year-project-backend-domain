@@ -5,11 +5,11 @@ import { NotificationType } from '../../enum/notification/notification-type.enum
 
 @Schema({ collection: 'notifications' })
 export class NotificationDocument extends BaseDocument {
-  @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: 'User' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
   receiverId: Types.ObjectId;
 
-  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'User' })
-  senders: [Types.ObjectId];
+  @Prop({ type: [MongooseSchema.Types.ObjectId] })
+  senders: Types.ObjectId[];
 
   @Prop({ type: String, required: true })
   message: string;
