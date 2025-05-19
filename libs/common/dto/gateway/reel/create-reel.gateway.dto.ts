@@ -8,8 +8,6 @@ import {
   IsOptional,
 } from 'class-validator';
 import { ReelPrivacy } from '../../../enum/reel/reel-visibility.enum';
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
-
 export class CreateReelGatewayDto {
   // @IsNotEmpty()
   // videoFile: any;
@@ -29,7 +27,7 @@ export class CreateReelGatewayDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  mentionedUsers?: MentionedUser[];
+  mentionedUsers?: string[];
 
   @IsOptional()
   @IsEnum(ReelPrivacy)

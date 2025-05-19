@@ -6,6 +6,7 @@ export class UserRto {
     public email: string,
     public password: string,
     public firstName: string,
+    public picture: string,
     public lastName: string,
     public role: string,
   ) {}
@@ -17,6 +18,7 @@ export class UserRto {
       entity.email,
       entity.password,
       entity.firstName,
+      entity.profilePic,
       entity.lastName,
       entity.role,
     );

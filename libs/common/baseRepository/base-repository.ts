@@ -4,6 +4,7 @@ import {
   UpdateQuery,
   MongooseUpdateQueryOptions,
   Query,
+  QueryOptions,
 } from 'mongoose';
 import { Logger, NotFoundException } from '@nestjs/common';
 import { BaseDocument } from '../models/base.model';
@@ -61,8 +62,11 @@ export abstract class BaseRepository<TDocument extends BaseDocument> {
     return document;
   }
 
-  find(filterQuery: FilterQuery<TDocument>): Query<TDocument[], TDocument> {
-    return this.model.find(filterQuery);
+  find(
+    filterQuery: FilterQuery<TDocument>,
+    options?: QueryOptions<TDocument>,
+  ): Query<TDocument[], TDocument> {
+    return this.model.find(filterQuery, null, options);
   }
   FilterQuery;
   async findOneAndDelete(

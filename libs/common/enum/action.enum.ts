@@ -45,12 +45,16 @@ export enum ACTION {
   UPDATE_REEL = 'update-reel',
   DELETE_REEL = 'delete-reel',
   RETRIEVE_REEL = 'retrieve-reel',
+  FAVORITE_REEL = 'favorite-reel',
   LIKE_REEL = 'like-reel',
   UNLIKE_REEL = 'unlike-reel',
   COMMENT_REEL = 'comment-reel',
   SHARE_REEL = 'share-reel',
+  GET_COMMENTS_BY_REELID = 'get-comments-by-reelid',
   RETRIEVE_REEL_ANALYTICS = 'retrieve-reel-analytics',
   LIST_TRENDING_REELS = 'list-trending-reels',
+  GET_REPORTS_BY_ENTITY = 'get-reports-by-entity',
+  GET_CREATED_AFTER = 'get-created-after',
 
   // 4. Gifting System
   SEND_GIFT = 'send-gift',
