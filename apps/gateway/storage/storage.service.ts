@@ -85,6 +85,28 @@ export class StorageService {
     }
   }
 
+  async uploadMultipleFiles(
+    files: Express.Multer.File[],
+  ): Promise<S3.ManagedUpload.SendData[]> {
+    this.logger.log(`Uploading ${files.length} files`);
+
+    const uploadResults: S3.ManagedUpload.SendData[] = [];
+
+    for (const file of files) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const result = await this.uploadFile(file);
+        uploadResults.push(result);
+      } catch (error) {
+        this.logger.error(`Error uploading file ${file.originalname}:`, error);
+
+        throw error;
+      }
+    }
+
+    return uploadResults;
+  }
+
   async listObject(): Promise<any> {
     this.logger.log('Listing objects in S3 bucket');
 

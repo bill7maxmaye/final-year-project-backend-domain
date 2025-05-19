@@ -20,6 +20,7 @@ export class AuthenticationController {
     console.log('📤 Sending request to Auth Microservice:', createUserDto);
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const response = await this.networking.send<UserRto>(
         `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.REGISTER}`,
         createUserDto,

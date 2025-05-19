@@ -1,23 +1,33 @@
-import { ReactionsDocument } from '../../../models/social/reactions.model';
+import { PostCommentDocument } from '@app/common//models/social/comment.model';
 
 export class CommentRto {
-  id: string;
-  content: string;
-  authorId: string;
-  postId: string;
-  reactions: ReactionsDocument;
-  likedBy: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  constructor(
+    public id: string,
+    public content: string,
+    public postId: string,
+    public replies: string[],
+    public likedBy: string[],
+    public files: string[],
+    public mentions: string[],
+    public createdAt: Date,
+    public updatedAt: Date,
+    public parentId?: string,
+    public authorId?: string,
+  ) {}
 
-  constructor(comment: any) {
-    this.id = comment._id;
-    this.content = comment.content;
-    this.authorId = comment.authorId;
-    this.postId = comment.postId;
-    this.reactions = comment.reactions;
-    this.likedBy = comment.likedBy;
-    this.createdAt = comment.createdAt;
-    this.updatedAt = comment.updatedAt;
+  static fromEntity(entity: PostCommentDocument): CommentRto {
+    return new CommentRto(
+      entity._id.toString(),
+      entity.content,
+      entity.postId!,
+      entity.replies ?? [],
+      entity.likedBy ?? [],
+      entity.files ?? [],
+      entity.mentions ?? [],
+      entity.createdAt,
+      entity.updatedAt,
+      entity.parentId,
+      entity.authorId,
+    );
   }
 }

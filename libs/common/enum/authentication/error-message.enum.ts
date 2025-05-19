@@ -8,4 +8,6 @@ export enum ErrorMessage {
   VERIFICATION_CODE_EXPIRED = 'Verification code expired',
   VERIFICATION_PENDING = 'User verification pending',
   INTERNAL_SERVER_ERROR = 'Internal server error',
+  COMMENT_NOT_FOUND = 'Comment not found',
+  COMMENTS_NOT_FOUND = 'Comments not found',
 }
