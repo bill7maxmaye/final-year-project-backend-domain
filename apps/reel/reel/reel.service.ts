@@ -159,7 +159,7 @@ export class ReelService {
     }
   }
 
-  async shareReel(reelId: string): Promise<void> {
+  async shareReel(reelId: string): Promise<number> {
     let objectIdReel: Types.ObjectId;
     try {
       objectIdReel = new Types.ObjectId(reelId);
@@ -172,10 +172,11 @@ export class ReelService {
     };
 
     try {
-      await this.reelRepository.updateOneAndRetrieve(
+      const reel = await this.reelRepository.updateOneAndRetrieve(
         { _id: objectIdReel },
         updateOperation,
       );
+      return reel.shareCount;
     } catch (error) {
       console.error(`Error updating share count for reel ${reelId}:`, error);
       throw error;

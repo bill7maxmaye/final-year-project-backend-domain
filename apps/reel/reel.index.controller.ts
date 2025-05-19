@@ -19,10 +19,11 @@ import { ReportRto } from '@app/common//rto/microservices/reel/report.rto';
 import { ReportService } from './report/report.service';
 import { UpdateReportDto } from '@app/common//dto/microservices/reel/update-report.dto';
 import { ReportedEntityType } from '@app/common//enum/reel/reported-entity-type.enum';
-import { SuccessRto } from '@app/common//rto/success.rto';
 import { LikeResponse } from '@app/common//dto/interface/like.interface';
 import { LikeableType } from '@app/common//enum/reel/likeable-type.enum';
 import { LikeResponseRTO } from '@app/common//rto/microservices/reel/like-response.rto';
+import { DeleteCommentResponseRto } from '@app/common//rto/microservices/reel/delete-comment-response.rto';
+import { ShareReelResponseRto } from '@app/common//rto/microservices/reel/Share-reel-response.rto';
 
 @Controller()
 export class ReelController {
@@ -300,11 +301,13 @@ export class ReelController {
   @MessagePattern(
     `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.SHARE_REEL}`,
   )
-  async handleShareReel(@Payload() reelId: string): Promise<SuccessRto> {
+  async handleShareReel(
+    @Payload() reelId: string,
+  ): Promise<ShareReelResponseRto> {
     this.logger.log(`Handling share reel with id ${reelId}`);
     try {
-      await this.reelService.shareReel(reelId);
-      return new SuccessRto();
+      const shareCount = await this.reelService.shareReel(reelId);
+      return ShareReelResponseRto.from(reelId, shareCount);
     } catch (error) {
       this.logger.error(`Error sharing reel ${reelId}: ${error}`);
       throw error;
@@ -338,7 +341,9 @@ export class ReelController {
         createCommentDto.body.reelId,
       );
 
-      return CommentRto.fromEntity(comment);
+      console.log(comment, currentCommentCount);
+
+      return CommentRto.fromEntity(comment, currentCommentCount);
     } catch (error) {
       this.logger.error(`Error creating comment for reel ${error}`);
       throw error;
@@ -359,7 +364,7 @@ export class ReelController {
         payload.id,
         payload.updateCommentDto,
       );
-      return CommentRto.fromEntity(comment);
+      return CommentRto.fromEntity(comment, 0);
     } catch (error) {
       this.logger.error(`Error updating comment ${payload.id}: ${error}`);
       throw error;
@@ -371,7 +376,7 @@ export class ReelController {
   )
   async handleDeleteComment(
     @Payload() payload: { id: string },
-  ): Promise<SuccessRto> {
+  ): Promise<DeleteCommentResponseRto> {
     this.logger.log(`Handling delete comment with id ${payload.id}`);
     try {
       const comment = await this.commentService.deleteComment(payload.id);
@@ -380,7 +385,9 @@ export class ReelController {
         comment.reelId,
       );
 
-      return new SuccessRto();
+      console.log('currentCommentCount ${}');
+
+      return DeleteCommentResponseRto.from(comment.reelId, currentCommentCount);
     } catch (error) {
       this.logger.error(`Error deleting comment ${payload.id}: ${error}`);
       throw error;
@@ -394,7 +401,7 @@ export class ReelController {
     this.logger.log(`Handling get comment with id ${id}`);
     try {
       const comment = await this.commentService.getComment(id);
-      return CommentRto.fromEntity(comment);
+      return CommentRto.fromEntity(comment, 0);
     } catch (error) {
       this.logger.error(`Error getting comment ${id}: ${error}`);
       throw error;
@@ -477,7 +484,7 @@ export class ReelController {
       // 5. Map the fetched Comment entities to CommentRto, passing the likedCommentIds set
       // The fromEntities method in CommentRto is designed to use this set
       // to determine the 'isLiked' status for each comment.
-      const commentRtos = CommentRto.fromEntities(comments, likedCommentIds);
+      const commentRtos = CommentRto.fromEntities(comments, 0, likedCommentIds);
       this.logger.log(
         `Mapped ${commentRtos.length} comments to RTOs for reel ${payload.reelId}.`,
       );

@@ -159,6 +159,7 @@ export class CommentService {
 
       const comments = await this.commentRepository
         .find(filterQuery)
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec();

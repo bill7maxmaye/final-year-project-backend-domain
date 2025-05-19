@@ -44,6 +44,7 @@ import { ReportedEntityType } from '@app/common//enum/reel/reported-entity-type.
 import { ReelGatewayRto } from '@app/common//rto/gateway/reel/reel-gateway.rto';
 import { SuccessRto } from '@app/common//rto/success.rto';
 import { LikeResponseRTO } from '@app/common//rto/microservices/reel/like-response.rto';
+import { ShareReelResponseRto } from '@app/common//rto/microservices/reel/Share-reel-response.rto';
 @Controller('reel')
 @UseGuards(JwtAuthGuard)
 export class ReelController {
@@ -355,9 +356,11 @@ export class ReelController {
   }
 
   @Post('share/:reelId')
-  async shareReel(@Param('reelId') reelId: string): Promise<SuccessRto> {
+  async shareReel(
+    @Param('reelId') reelId: string,
+  ): Promise<ShareReelResponseRto> {
     this.logger.log(`Received request to share reel with id: ${reelId}`);
-    const response = await this.networking.send<SuccessRto>(
+    const response = await this.networking.send<ShareReelResponseRto>(
       `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.SHARE_REEL}`,
       reelId,
     );

@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Schema as MongooseSchema, Types } from 'mongoose';
 import { BaseDocument, BaseSchema } from '../base.model';
 
-@Schema({ collection: 'comments' })
+@Schema({ collection: 'Reel-Comments' })
 export class CommentDocument extends BaseDocument {
   @Prop({ type: String, required: true })
   content: string;
