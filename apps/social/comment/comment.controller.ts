@@ -140,10 +140,27 @@ export class CommentController {
   ): Promise<CommentRto[]> {
     try {
       console.log('Receiving comments for post:', postId);
-      const comments = await this.service.getCommentsByPostId(postId); 
+      const comments = await this.service.getCommentsByPostId(postId);
       return comments.map((comment) => CommentRto.fromEntity(comment));
     } catch (error) {
       this.logger.error(`Error retrieving comments for post ${postId}:`, error);
+      throw error;
+    }
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.TOGGLE}`,
+  )
+  async togglePost(
+    @Payload() payload: { id: string; userId: string },
+  ): Promise<CommentRto> {
+    try {
+      const { id, userId } = payload;
+      console.log(`User ${userId} is toogling post ${id}`);
+      const response = await this.service.toggleReaction(id, userId);
+      return CommentRto.fromEntity(response);
+    } catch (error) {
+      this.logger.error(`Error liking post ${payload.id}:`, error);
       throw error;
     }
   }

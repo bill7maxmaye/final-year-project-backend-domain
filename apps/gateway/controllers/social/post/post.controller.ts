@@ -26,7 +26,6 @@ import { CONTROLLER } from '@app/common//enum/controller.enum';
 import { ACTION } from '@app/common//enum/action.enum';
 import { CreatePostDto } from '@app/common//dto/microservices/social/post/create-post.dto';
 import { StorageService } from 'apps/gateway/storage/storage.service';
-import { v4 as uuidv4 } from 'uuid';
 import { FindResult } from '@app/common//rto/find-result';
 import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
 import { PostReportDto } from '@app/common//dto/gateway/social/post/post-report.dto';
@@ -34,6 +33,7 @@ import { ActiveUser } from '@app/common//decorators/active-user-decorator';
 import { User } from '@app/common//entities/user/user-entity';
 import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
 import { PostGatewayRto } from '@app/common//rto/gateway/social/post/post-gateway.rto';
+import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 
 @Controller('social')
 @UseGuards(JwtAuthGuard)
@@ -62,14 +62,24 @@ export class PostController {
       files && (await this.storageService.uploadMultipleFiles(files));
     console.log('userId', user);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const post = CreatePostDto.fromCreate(body, uploadResult);
+    const post = CreatePostDto.fromCreate(body, uploadResult, user.id);
+    console.log('post', post);
 
+    console.log('post', post);
     const response = await this.networking.send<PostRto>(
       `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.CREATE}`,
       post,
     );
 
-    const result = PostGatewayRto.fromEntity(response, user);
+    console.log('response', response);
+
+    const owner = await this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+      post.authorId,
+    );
+
+    console.log('owner', owner);
+    const result = PostGatewayRto.fromEntity(response, owner);
 
     return result;
   }
@@ -79,20 +89,28 @@ export class PostController {
   async update(
     @Param('id') id: string,
     @Body() body: UpdatePostGatewayDto,
+    @ActiveUser() user: User,
     @UploadedFiles() files?: Express.Multer.File[],
-  ): Promise<PostRto> {
+  ): Promise<PostGatewayRto> {
     const uploadResult =
       files && (await this.storageService.uploadMultipleFiles(files));
     // const userId = uuidv4();
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const post = CreatePostDto.fromUpdate(body, uploadResult);
+    const post = CreatePostDto.fromUpdate(body, uploadResult, user.id);
     const response = await this.networking.send<PostRto>(
       `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.UPDATE}`,
       { id, data: post },
     );
 
-    return response;
+    const owner = await this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+      post.authorId,
+    );
+
+    const result = PostGatewayRto.fromEntity(response, owner);
+
+    return result;
   }
 
   @Delete('posts/:id')
@@ -104,18 +122,31 @@ export class PostController {
     return result;
   }
 
-  @Post('posts/:id/like')
-  async likePost(@Param('id') id: string): Promise<PostRto> {
-    const userId = uuidv4();
+  @Post('posts/:id/toggleReaction')
+  async toggleReaction(
+    @Param('id') id: string,
+    @ActiveUser() user: User,
+  ): Promise<PostGatewayRto> {
     const response = await this.networking.send<PostRto>(
-      `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIKE}`,
-      { id, userId },
+      `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.TOGGLE}`,
+      { id, userId: user.id },
     );
-    return response;
+
+    const owner = await this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+      user.id,
+    );
+
+    const result = PostGatewayRto.fromEntity(response, owner);
+
+    return result;
   }
 
   @Get('posts')
-  async listAll(@Query() query: ListAllDto): Promise<FindResult<PostRto>> {
+  async listAll(
+    @Query() query: ListAllDto,
+    @ActiveUser() user: User,
+  ): Promise<FindResult<PostGatewayRto>> {
     try {
       const response = await this.networking.send<FindResult<PostRto>>(
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIST_ALL}`,
@@ -123,7 +154,20 @@ export class PostController {
           payload: query,
         },
       );
-      return response;
+
+      const owner = await this.networking.send<UserRto>(
+        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+        user.id,
+      );
+
+      const posts = response.data.map((post) =>
+        PostGatewayRto.fromEntity(post, owner),
+      );
+
+      return {
+        data: posts,
+        total: response.total,
+      };
     } catch (error) {
       this.logger.error('Error listing posts', error.stack);
       throw error;
@@ -142,16 +186,6 @@ export class PostController {
       this.logger.error(`Error retrieving post ${id}`, error.stack);
       throw error;
     }
-  }
-
-  @Post('posts/:id/unlike')
-  async unlikePost(@Param('id') id: string): Promise<PostRto> {
-    const userId = uuidv4();
-    const response = await this.networking.send<PostRto>(
-      `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.UNLIKE}`,
-      { id, userId },
-    );
-    return response;
   }
 
   @Post('posts/:id/report')

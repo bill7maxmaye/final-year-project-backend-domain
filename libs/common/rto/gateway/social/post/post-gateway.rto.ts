@@ -10,7 +10,7 @@ export class PostGatewayRto {
     public likedBy: string[],
     public createdAt: Date,
     public updatedAt: Date,
-    public profile: User,
+    public owner: User,
   ) {}
 
   static fromEntity(post: PostRto, user: User): PostGatewayRto {

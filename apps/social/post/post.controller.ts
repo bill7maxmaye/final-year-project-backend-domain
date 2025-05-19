@@ -62,37 +62,19 @@ export class PostController {
     }
   }
 
-  // Like a post
   @MessagePattern(
-    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIKE}`,
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.TOGGLE}`,
   )
-  async likePost(
+  async togglePost(
     @Payload() payload: { id: string; userId: string },
   ): Promise<PostRto> {
     try {
       const { id, userId } = payload;
-      console.log(`User ${userId} is liking post ${id}`);
-      const response = await this.service.likePost(id, userId);
+      console.log(`User ${userId} is toogling post ${id}`);
+      const response = await this.service.toggleReaction(id, userId);
       return PostRto.fromEntity(response);
     } catch (error) {
       this.logger.error(`Error liking post ${payload.id}:`, error);
-      throw error;
-    }
-  }
-
-  @MessagePattern(
-    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.UNLIKE}`,
-  )
-  async unlikePost(
-    @Payload() payload: { id: string; userId: string },
-  ): Promise<PostRto> {
-    try {
-      const { id, userId } = payload;
-      console.log(`User ${userId} is unliking post ${id}`);
-      const response = await this.service.unlikePost(id, userId);
-      return PostRto.fromEntity(response);
-    } catch (error) {
-      this.logger.error(`Error unliking post ${payload.id}:`, error);
       throw error;
     }
   }

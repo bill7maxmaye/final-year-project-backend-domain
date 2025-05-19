@@ -4,6 +4,7 @@ import { PostRepository } from '@app/common//baseRepository/social/post-reposito
 import { CreateCommentDto } from '@app/common//dto/microservices/social/post/create-comment-dto';
 import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
 import { ErrorMessage } from '@app/common//enum/authentication/error-message.enum';
+import { CommentDocument } from '@app/common//models/reel/comment.model';
 import { PostCommentDocument } from '@app/common//models/social/comment.model';
 import { FindResult } from '@app/common//rto/find-result';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
@@ -160,6 +161,35 @@ export class CommentService {
     return response;
   }
 
+  async toggleReaction(
+    commentId: string,
+    userId: string,
+  ): Promise<PostCommentDocument> {
+    try {
+      const post = await this.commentRepository.findOne({ _id: commentId });
+
+      if (!post) {
+        throw new NotFoundException(`Post with ID ${commentId} not found`);
+      }
+      const likedByStrings = post.likedBy.map((id) => id.toString());
+      const isLiked = likedByStrings.includes(userId);
+      console.log('Post liked by:', post.likedBy, isLiked, userId);
+      const updateQuery = isLiked
+        ? { $pull: { likedBy: userId } } // remove if already liked
+        : { $addToSet: { likedBy: userId } }; // add only if not already there
+
+      await this.commentRepository.updateOne({ _id: commentId }, updateQuery);
+
+      // Return the updated post (optional: you can refetch it or return original)
+      return await this.commentRepository.findOne({ _id: commentId });
+    } catch (error) {
+      console.error('Error toggling like/unlike:', error);
+      throw new NotFoundException(
+        `Post with ID ${commentId} failed to update reaction`,
+      );
+    }
+  }
+
   async getCommentsByPostId(postId: string): Promise<PostCommentDocument[]> {
     console.log('Fetching comments for postId:', postId);
 
@@ -177,7 +207,7 @@ export class CommentService {
     query: ListAllDto,
   ): Promise<FindResult<PostCommentDocument>> {
     const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
+    const limit = Number(query.limit) || 100;
     const skip = (page - 1) * limit;
 
     const filter: any = {};

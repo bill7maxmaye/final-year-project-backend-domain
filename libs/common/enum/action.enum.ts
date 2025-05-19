@@ -114,4 +114,6 @@ export enum ACTION {
   LIST_ALL = 'list-all',
   LIKE = 'like',
   UNLIKE = 'unlike',
+  TOGGLE = 'toggle',
+  GET_USER = 'get-user',
 }

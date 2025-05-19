@@ -14,14 +14,9 @@ export class PostService {
     private readonly postReportRepository: PostReportRepository,
   ) {}
 
-  async createPost(
-    createPostDto: CreatePostDto,
-    authorId?: string,
-  ): Promise<PostDocument> {
-    console.log('before post with authorId:', createPostDto, authorId);
+  async createPost(createPostDto: CreatePostDto): Promise<PostDocument> {
     const post = await this.postRepository.create({
       ...createPostDto,
-      authorId: authorId,
     });
     console.log('Post created:', post);
     return post;
@@ -66,48 +61,29 @@ export class PostService {
     }
   }
 
-  async likePost(postId: string, userId: string): Promise<PostDocument> {
-    try {
-      const post = await this.postRepository.findOne({ _id: postId });
-
-      console.log('Post before like:', post);
-
-      if (!post) {
-        throw new NotFoundException(`Post with ID ${postId} not found`);
-      }
-
-      if (!post.likedBy.includes(userId)) {
-        post.likedBy.push(userId);
-        await post.save();
-      }
-
-      return post;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new NotFoundException(`Post with ID ${postId} `);
-    }
-  }
-
-  async unlikePost(postId: string, userId: string): Promise<PostDocument> {
+  async toggleReaction(postId: string, userId: string): Promise<PostDocument> {
     try {
       const post = await this.postRepository.findOne({ _id: postId });
 
       if (!post) {
         throw new NotFoundException(`Post with ID ${postId} not found`);
       }
+      const likedByStrings = post.likedBy.map((id) => id.toString());
+      const isLiked = likedByStrings.includes(userId);
+      console.log('Post liked by:', post.likedBy, isLiked, userId);
+      const updateQuery = isLiked
+        ? { $pull: { likedBy: userId } } // remove if already liked
+        : { $addToSet: { likedBy: userId } }; // add only if not already there
 
-      console.log('Post before unlike:', post, userId);
-      post.likedBy = post.likedBy.filter((id) => id !== userId);
-      await post.save();
+      await this.postRepository.updateOne({ _id: postId }, updateQuery);
 
-      return post;
+      // Return the updated post (optional: you can refetch it or return original)
+      return await this.postRepository.findOne({ _id: postId });
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new NotFoundException(`Post with ID ${postId} not found `);
+      console.error('Error toggling like/unlike:', error);
+      throw new NotFoundException(
+        `Post with ID ${postId} failed to update reaction`,
+      );
     }
   }
 
@@ -117,7 +93,7 @@ export class PostService {
 
   async listAllPosts(query: ListAllDto): Promise<FindResult<PostDocument>> {
     const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
+    const limit = Number(query.limit) || 300;
     const skip = (page - 1) * limit;
 
     const filter: any = {};
@@ -178,7 +154,6 @@ export class PostService {
       const post = await this.postRepository.findOne({
         _id: report.content_id,
       });
-
 
       console.log('Post found:', post);
 

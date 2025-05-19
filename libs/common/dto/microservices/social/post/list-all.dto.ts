@@ -5,7 +5,7 @@ export class ListAllDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  limit?: number = 20;
+  limit?: number = 50;
 
   @IsOptional()
   @IsString()

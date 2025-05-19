@@ -10,7 +10,7 @@ export class PostDocument extends BaseDocument {
   @Prop({ type: [String], default: [] })
   files: string[];
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, required: false, default: '' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true, default: '' })
   authorId: string;
 
   @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
