@@ -18,11 +18,13 @@ import databaseConfig from '@app/common//config/database.config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
-import { AuthenticationModule } from 'apps/authentication/authentication.module';
+import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
+// import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
   imports: [
-    AuthenticationModule,
+    // AuthenticationModule,
+    UserRepositoryModule,
     ConfigModule.forRoot({
       load: [rabbitmqConfig, socketConfig, s3StorageConfig, databaseConfig],
       isGlobal: true,
