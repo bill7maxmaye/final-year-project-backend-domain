@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-promise-reject-errors */
 import { cloudinary } from '@app/common//config/cloudinary.config';
 import { CreatePostGatewayDto } from '@app/common//dto/gateway/social/post/post-gateway.dto';
 import { UpdatePostGatewayDto } from '@app/common//dto/gateway/social/post/update-post.dto';

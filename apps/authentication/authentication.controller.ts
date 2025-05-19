@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthenticationService } from './authentication.service';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';

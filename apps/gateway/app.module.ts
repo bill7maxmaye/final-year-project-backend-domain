@@ -15,6 +15,7 @@ import s3StorageConfig from '@app/common//config/s3-storage.config';
 import { ReelController } from './controllers/reel/reel.controller';
 import { ReelService } from './controllers/reel/reel.service';
 import databaseConfig from '@app/common//config/database.config';
+import { CommentController } from './controllers/reel/comment/comment.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
@@ -45,6 +46,7 @@ import { AuthenticationModule } from 'apps/authentication/authentication.module'
     // SocialController,
     PostController,
     ReelController,
+    CommentController,
   ],
   providers: [
     AppService,
