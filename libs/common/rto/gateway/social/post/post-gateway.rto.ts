@@ -1,5 +1,5 @@
-import { User } from '@app/common//entities/user/user-entity';
 import { PostRto } from '../../../social/post/post.rto';
+import { UserRto } from '../../../microservices/auth/user.rto';
 
 export class PostGatewayRto {
   constructor(
@@ -10,10 +10,10 @@ export class PostGatewayRto {
     public likedBy: string[],
     public createdAt: Date,
     public updatedAt: Date,
-    public owner: User,
+    public owner: UserRto,
   ) {}
 
-  static fromEntity(post: PostRto, user: User): PostGatewayRto {
+  static fromEntity(post: PostRto, user: UserRto): PostGatewayRto {
     return new PostGatewayRto(
       post.id,
       post.content ?? '',

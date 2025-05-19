@@ -1,4 +1,4 @@
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
+import { ReelPrivacy } from '@app/common//enum/reel/reel-visibility.enum';
 import { ReelRto } from '../../microservices/reel/reel.rto';
 import { ProfileSummaryRto } from './profile-summary.rto';
 
@@ -11,23 +11,24 @@ export class ReelGatewayRto {
     public isPremiumContent: boolean,
     public duration: number,
     public hashtags: string[],
-    public mentionedUsers: MentionedUser[],
+    public mentionedUsers: string[],
     public allowComments: boolean,
     public allowSaveToDevice: boolean,
     public saveWithWatermark: boolean,
+    public audienceControlUnder18: boolean,
     public likes: number,
     public comments: number,
     public favoriteCount: number,
     public shareCount: number,
     public createdAt: string,
     public updatedAt: string,
-    public isLikedByUser?: boolean,
+    public privacy: ReelPrivacy,
+    public isLikedByUser: boolean,
   ) {}
 
   static fromPostAggregatedData(
     entity: ReelRto,
     profile: ProfileSummaryRto,
-    isLikedByUser?: boolean,
   ): ReelGatewayRto {
     return new ReelGatewayRto(
       entity.id,
@@ -37,17 +38,19 @@ export class ReelGatewayRto {
       entity.isPremiumContent,
       entity.duration,
       entity.hashtags,
-      entity.mentionedUsers,
+      entity.mentionedUserIds,
       entity.allowComments,
       entity.allowSaveToDevice,
       entity.saveWithWatermark,
+      entity.audienceControlUnder18,
       entity.likes,
       entity.comments,
       entity.favoriteCount,
       entity.shareCount,
       entity.createdAt,
       entity.updatedAt,
-      isLikedByUser,
+      entity.privacy,
+      entity.isLiked,
     );
   }
 }

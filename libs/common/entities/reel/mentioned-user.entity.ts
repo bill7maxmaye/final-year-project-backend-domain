@@ -1,17 +1,21 @@
-import { Types } from 'mongoose';
-import { MentionedUserDocument } from '../../models/reel/mentioned-user.model';
-
 export class MentionedUser {
   constructor(
-    public userId: Types.ObjectId,
+    public userId: string,
     public username: string,
   ) {}
 
-  static fromDocument(document: MentionedUserDocument): MentionedUser {
-    return new MentionedUser(document.userId, document.username);
+  static fromDocument(userId: string, username: string): MentionedUser {
+    return new MentionedUser(userId, username);
   }
 
-  static fromDocuments(documents: MentionedUserDocument[]): MentionedUser[] {
-    return documents.map((document) => MentionedUser.fromDocument(document));
+  static fromDocuments(
+    mensionedUsers: {
+      userId: string;
+      username: string;
+    }[],
+  ): MentionedUser[] {
+    return mensionedUsers.map((document) =>
+      MentionedUser.fromDocument(document.userId, document.username),
+    );
   }
 }

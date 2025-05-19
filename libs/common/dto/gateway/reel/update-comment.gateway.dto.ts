@@ -1,4 +1,3 @@
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
 import { IsOptional, IsString, IsArray, IsNumber } from 'class-validator';
 
 export class UpdateCommentGatewayDto {
@@ -9,7 +8,7 @@ export class UpdateCommentGatewayDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  mentionedUsers?: MentionedUser[];
+  mentionedUsers?: string[];
 
   @IsOptional()
   @IsNumber()
