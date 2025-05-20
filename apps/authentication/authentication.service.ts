@@ -12,7 +12,7 @@ import {
   UserStatus,
 } from '@app/common//models/authentication/user.model';
 import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
@@ -482,6 +482,22 @@ export class AuthenticationService {
     } catch (error) {
       if (error instanceof MicroserviceException) {
         throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async checkUsernameAvailability(username: string): Promise<boolean> {
+    try {
+      const existingUser = await this.userRepository.findOne({ username });
+      return false; // Username is taken
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return true; // Username is available
       }
       throw new MicroserviceException(
         ErrorMessage.INTERNAL_SERVER_ERROR,

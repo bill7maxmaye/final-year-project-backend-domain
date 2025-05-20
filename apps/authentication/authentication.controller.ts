@@ -158,4 +158,13 @@ export class AuthenticationController {
       data.targetUserId,
     );
   }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.CHECK_USERNAME_AVAILABILITY}`,
+  )
+  async checkUsernameAvailability(
+    @Payload() username: string,
+  ): Promise<boolean> {
+    return await this.authenticationService.checkUsernameAvailability(username);
+  }
 }

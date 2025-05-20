@@ -115,4 +115,5 @@ export enum ACTION {
   DELETE = 'delete',
   LIST_ALL = 'list-all',
   GET_USER = 'get-user',
+  CHECK_USERNAME_AVAILABILITY = 'check-username-availability',
 }

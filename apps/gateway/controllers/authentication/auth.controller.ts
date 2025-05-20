@@ -177,6 +177,18 @@ export class AuthenticationController {
     );
   }
 
+  @Get('check-username/:username')
+  async checkUsernameAvailability(
+    @Param('username') username: string,
+  ): Promise<{ available: boolean }> {
+    console.log('📤 Checking username availability:', username);
+    const isAvailable = await this.networking.send<boolean>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.CHECK_USERNAME_AVAILABILITY}`,
+      username,
+    );
+    return { available: isAvailable };
+  }
+
   // @Get('get-user')
   // async getUser(@Payload() userId: string): Promise<UserRto> {
   //   console.log('📤 Sending request to Auth Microservice:', userId);
