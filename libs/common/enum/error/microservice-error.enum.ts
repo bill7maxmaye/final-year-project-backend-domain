@@ -10,4 +10,5 @@ export enum MicroserviceErrorCode {
   POST_NOT_FOUND = 'post-not-found',
   COMMENT_NOT_FOUND = 'comment-not-found',
   COMMENTS_NOT_FOUND = 'comments-not-found',
+  INVALID_OPERATION = 'invalid-operation',
 }

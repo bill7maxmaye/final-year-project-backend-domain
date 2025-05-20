@@ -1,21 +1,22 @@
-import { MicroserviceException, MicroserviceErrorCode } from '@app/common';
+import { MicroserviceErrorCode, MicroserviceException } from '@app/common';
 import { UserRepository } from '@app/common//baseRepository/userRepository/user.repository';
+import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
+import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
+import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
+import { UpdateProfileDto } from '@app/common//dto/microservices/authentication/update-profile.dto';
 import { CreateUserDto } from '@app/common//dto/microservices/authentication/userDto';
+import { VerifyEmailDto } from '@app/common//dto/microservices/authentication/verify-email.dto';
 import { ErrorMessage } from '@app/common//enum/authentication/error-message.enum';
 import {
   UserDocument,
   UserStatus,
 } from '@app/common//models/authentication/user.model';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { EmailService } from './email.service';
-import { VerifyEmailDto } from '@app/common//dto/microservices/authentication/verify-email.dto';
-import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
-import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
 import * as jwt from 'jsonwebtoken';
-import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
-import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
+import { EmailService } from './email.service';
 @Injectable()
 export class AuthenticationService {
   constructor(
@@ -253,7 +254,7 @@ export class AuthenticationService {
       );
     }
 
-    // Update the user’s password and clear the reset code
+    // Update the user's password and clear the reset code
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.userRepository.findOneAndUpdate(
       { _id: user._id },
@@ -273,5 +274,248 @@ export class AuthenticationService {
       );
     }
     return user;
+  }
+
+  async updateProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<UserDocument> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      const updatedUser = await this.userRepository.findOneAndUpdate(
+        { _id: user._id },
+        { ...updateProfileDto },
+      );
+
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async followUser(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<UserDocument> {
+    try {
+      // Prevent users from following themselves
+      if (currentUserId === targetUserId) {
+        throw MicroserviceException.fromException(
+          'Cannot follow yourself',
+          HttpStatus.BAD_REQUEST,
+          MicroserviceErrorCode.INVALID_OPERATION,
+        );
+      }
+
+      const [currentUser, targetUser] = await Promise.all([
+        this.userRepository.findById(currentUserId),
+        this.userRepository.findById(targetUserId),
+      ]);
+
+      if (!currentUser || !targetUser) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      if (currentUser.following.includes(targetUserId)) {
+        throw MicroserviceException.fromException(
+          'Already following this user',
+          HttpStatus.BAD_REQUEST,
+          MicroserviceErrorCode.INVALID_OPERATION,
+        );
+      }
+
+      // Update current user's following list
+      await this.userRepository.findOneAndUpdate(
+        { _id: currentUser._id },
+        { $push: { following: targetUserId } },
+      );
+
+      // Update target user's followers list
+      await this.userRepository.findOneAndUpdate(
+        { _id: targetUser._id },
+        { $push: { followers: currentUserId } },
+      );
+
+      return await this.userRepository.findById(currentUserId);
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async unfollowUser(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<UserDocument> {
+    try {
+      // Prevent users from unfollowing themselves
+      if (currentUserId === targetUserId) {
+        throw MicroserviceException.fromException(
+          'Cannot unfollow yourself',
+          HttpStatus.BAD_REQUEST,
+          MicroserviceErrorCode.INVALID_OPERATION,
+        );
+      }
+
+      const [currentUser, targetUser] = await Promise.all([
+        this.userRepository.findById(currentUserId),
+        this.userRepository.findById(targetUserId),
+      ]);
+
+      if (!currentUser || !targetUser) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      if (!currentUser.following.includes(targetUserId)) {
+        throw MicroserviceException.fromException(
+          'Not following this user',
+          HttpStatus.BAD_REQUEST,
+          MicroserviceErrorCode.INVALID_OPERATION,
+        );
+      }
+
+      // Update current user's following list
+      await this.userRepository.findOneAndUpdate(
+        { _id: currentUser._id },
+        { $pull: { following: targetUserId } },
+      );
+
+      // Update target user's followers list
+      await this.userRepository.findOneAndUpdate(
+        { _id: targetUser._id },
+        { $pull: { followers: currentUserId } },
+      );
+
+      return await this.userRepository.findById(currentUserId);
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getFollowers(userId: string): Promise<UserDocument[]> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      return await this.userRepository.find({ _id: { $in: user.followers } });
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getFollowing(userId: string): Promise<UserDocument[]> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      return await this.userRepository.find({ _id: { $in: user.following } });
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async checkFollowStatus(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<boolean> {
+    try {
+      const currentUser = await this.userRepository.findById(currentUserId);
+      if (!currentUser) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      return currentUser.following.includes(targetUserId);
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async checkUsernameAvailability(username: string): Promise<boolean> {
+    try {
+      const existingUser = await this.userRepository.findOne({ username });
+      return false; // Username is taken
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return true; // Username is available
+      }
+      throw new MicroserviceException(
+        ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

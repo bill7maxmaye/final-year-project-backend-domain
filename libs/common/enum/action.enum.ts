@@ -23,6 +23,12 @@ export enum ACTION {
   GET_ALL = 'get-all',
   GET_BY_ID = 'get-by-id',
   REPORT = 'report',
+  UPDATE_PROFILE = 'update-profile',
+  FOLLOW_USER = 'follow-user',
+  UNFOLLOW_USER = 'unfollow-user',
+  GET_FOLLOWERS = 'get-followers',
+  GET_FOLLOWING = 'get-following',
+  CHECK_FOLLOW_STATUS = 'check-follow-status',
 
   // 2. Social Posts
   CREATE_POST = 'create-post',
@@ -120,4 +126,5 @@ export enum ACTION {
   UNLIKE = 'unlike',
   TOGGLE = 'toggle',
   GET_USER = 'get-user',
+  CHECK_USERNAME_AVAILABILITY = 'check-username-availability',
 }
