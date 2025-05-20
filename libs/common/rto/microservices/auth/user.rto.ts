@@ -22,7 +22,7 @@ export class UserRto {
       entity._id.toString(),
       entity.email,
       entity.firstName,
-      entity.profilePic,
+      entity.profilePic!,
       entity.lastName,
       entity.role,
       entity.username,
