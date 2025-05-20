@@ -1,12 +1,15 @@
+import { ActiveUser } from '@app/common//decorators/active-user-decorator';
 import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
 import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
 import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
+import { UpdateProfileDto } from '@app/common//dto/microservices/authentication/update-profile.dto';
 import { CreateUserDto } from '@app/common//dto/microservices/authentication/userDto';
 import { VerifyEmailDto } from '@app/common//dto/microservices/authentication/verify-email.dto';
+import { User } from '@app/common//entities/user/user-entity';
+import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
 import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
 import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { Payload } from '@nestjs/microservices';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ACTION } from 'libs/common/enum/action.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
@@ -99,6 +102,78 @@ export class AuthenticationController {
     return this.networking.send<boolean>(
       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.RESET_PASSWORD}`,
       resetPasswordDto,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('updateprofile')
+  async updateProfile(
+    @ActiveUser() user: User,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ): Promise<UserRto> {
+    console.log('📤 Sending update profile request to Auth Microservice');
+    return this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_PROFILE}`,
+      { userId: user.id, updateProfileDto },
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('follow/:targetId')
+  async followUser(
+    @ActiveUser() user: User,
+    @Param('targetId') targetId: string,
+  ): Promise<UserRto> {
+    console.log('📤 Sending follow user request to Auth Microservice');
+    return this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.FOLLOW_USER}`,
+      { currentUserId: user.id, targetUserId: targetId },
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('unfollow/:targetId')
+  async unfollowUser(
+    @ActiveUser() user: User,
+    @Param('targetId') targetId: string,
+  ): Promise<UserRto> {
+    console.log('📤 Sending unfollow user request to Auth Microservice');
+    return this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UNFOLLOW_USER}`,
+      { currentUserId: user.id, targetUserId: targetId },
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('followers')
+  async getFollowers(@ActiveUser() user: User): Promise<UserRto[]> {
+    console.log('📤 Sending get followers request to Auth Microservice');
+    return this.networking.send<UserRto[]>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_FOLLOWERS}`,
+      user.id,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('following')
+  async getFollowing(@ActiveUser() user: User): Promise<UserRto[]> {
+    console.log('📤 Sending get following request to Auth Microservice');
+    return this.networking.send<UserRto[]>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_FOLLOWING}`,
+      user.id,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('follow-status/:targetId')
+  async checkFollowStatus(
+    @ActiveUser() user: User,
+    @Param('targetId') targetId: string,
+  ): Promise<boolean> {
+    console.log('📤 Sending check follow status request to Auth Microservice');
+    return this.networking.send<boolean>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.CHECK_FOLLOW_STATUS}`,
+      { currentUserId: user.id, targetUserId: targetId },
     );
   }
 

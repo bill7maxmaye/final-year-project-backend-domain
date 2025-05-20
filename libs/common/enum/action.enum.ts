@@ -20,6 +20,12 @@ export enum ACTION {
   REMOVE_SECONDARY_EMAIL = 'remove-secondary-email',
   RETRIEVE_PROFILE_VIEW_MAP = 'retrieve-profile-view-map',
   UPDATE_PREFERENCES = 'update-preferences',
+  UPDATE_PROFILE = 'update-profile',
+  FOLLOW_USER = 'follow-user',
+  UNFOLLOW_USER = 'unfollow-user',
+  GET_FOLLOWERS = 'get-followers',
+  GET_FOLLOWING = 'get-following',
+  CHECK_FOLLOW_STATUS = 'check-follow-status',
 
   // 2. Social Posts
   CREATE_POST = 'create-post',
