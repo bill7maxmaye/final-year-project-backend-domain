@@ -1,4 +1,3 @@
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
 import { ReelPrivacy } from '../../../enum/reel/reel-visibility.enum';
 import { CreateReelGatewayDto } from '../../gateway/reel/create-reel.gateway.dto';
 import { extractHashtags } from '@app/common//utils/string.utils';
@@ -12,7 +11,7 @@ export class CreateReelDto {
     public readonly duration: number,
     public readonly isPremiumContent?: boolean,
     public readonly hashtags?: string[],
-    public readonly mentionedUsers?: MentionedUser[],
+    public readonly mentionedUsers?: string[],
     public readonly privacy?: ReelPrivacy,
     public readonly allowComments?: boolean,
     public readonly allowSaveToDevice?: boolean,

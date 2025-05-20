@@ -10,6 +10,18 @@ import {
 } from '@app/common//models/social/post.model';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
+import { CommentController } from './comment/comment.controller';
+import { CommentService } from './comment/comment.service';
+import {
+  PostCommentDocument,
+  PostCommentSchema,
+} from '@app/common//models/social/comment.model';
+import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
+import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
+import {
+  PostReportDocument,
+  ReportSchema,
+} from '@app/common//models/social/post-report.model';
 
 @Module({
   imports: [
@@ -19,6 +31,13 @@ import { PostRepository } from '@app/common//baseRepository/social/post-reposito
     MongooseModule.forFeature([
       { name: PostDocument.name, schema: PostSchema },
     ]),
+    MongooseModule.forFeature([
+      { name: PostCommentDocument.name, schema: PostCommentSchema },
+    ]),
+
+    MongooseModule.forFeature([
+      { name: PostReportDocument.name, schema: ReportSchema },
+    ]),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -27,7 +46,14 @@ import { PostRepository } from '@app/common//baseRepository/social/post-reposito
       inject: [ConfigService],
     }),
   ],
-  controllers: [SocialController, PostController],
-  providers: [SocialService, PostService, PostRepository],
+  controllers: [SocialController, PostController, CommentController],
+  providers: [
+    SocialService,
+    PostService,
+    PostRepository,
+    PostCommentRepository,
+    CommentService,
+    PostReportRepository,
+  ],
 })
 export class SocialModule {}

@@ -1,4 +1,3 @@
-// @app/common/utils/string.utils.ts
 export function extractHashtags(text: string): string[] {
   const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
   const matches = text.matchAll(hashtagRegex);

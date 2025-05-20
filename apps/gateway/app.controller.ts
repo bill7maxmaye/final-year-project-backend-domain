@@ -11,22 +11,24 @@ import {
   Delete,
   Query,
   Body,
-  UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from './app.service';
 import { StorageService } from './storage/storage.service';
-import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
+// import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
 import { User } from '@app/common//entities/user/user-entity';
 import { ActiveUser } from '@app/common//decorators/active-user-decorator';
+
+// const TEMP_UPLOAD_DIR_WINDOWS = path.join(os.tmpdir(), 'image_uploads_nestjs');
 
 interface UploadRequestDto {
   title: string;
   description: string;
-  // other text fields
 }
+
 @Controller()
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard)
 export class AppController {
   private readonly logger = new Logger(AppController.name);
 
@@ -85,9 +87,8 @@ export class AppController {
   //   return responseData;
   // }
 
-  @Delete() // Changed mapping here. No path param!
+  @Delete()
   async deleteFile(@Query('fileKey') fileKey: string) {
-    // Changed to @Query
     try {
       await this.storageService.deleteFile(fileKey);
       return { message: `File ${fileKey} deleted successfully` };

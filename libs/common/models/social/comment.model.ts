@@ -1,29 +1,42 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
-import { ReactionsDocument, defaultReactions } from './reactions.model';
+import { Schema as MongooseSchema } from 'mongoose';
 import { BaseDocument } from '../base.model';
 
-export type CommentDocument = Comment & BaseDocument;
-
 @Schema({ timestamps: true })
-export class Comment {
-  @Prop({ required: true })
+export class PostCommentDocument extends BaseDocument {
+  @Prop({ type: String, default: null })
   content: string;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
-  authorId: string;
+  @Prop({ type: MongooseSchema.Types.ObjectId, default: null, required: false })
+  authorId?: string;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
-  postId: string;
+  @Prop({ type: MongooseSchema.Types.ObjectId, default: null, required: false })
+  postId?: string;
 
-  @Prop({ type: Object, default: defaultReactions })
-  reactions: ReactionsDocument;
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Comment',
+    default: null,
+    required: false,
+  })
+  parentId: string;
+
+  @Prop({
+    type: [MongooseSchema.Types.ObjectId],
+    default: [],
+    ref: 'PostComment',
+  })
+  replies: string[];
 
   @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
   likedBy: string[];
 
-  @Prop({ default: false })
-  isDeleted: boolean;
+  @Prop({ type: [String], default: [] })
+  files: string[];
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
+  mentions: string[];
 }
 
-export const CommentSchema = SchemaFactory.createForClass(Comment);
+export const PostCommentSchema =
+  SchemaFactory.createForClass(PostCommentDocument);

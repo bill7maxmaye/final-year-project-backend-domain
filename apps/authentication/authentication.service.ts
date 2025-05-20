@@ -169,7 +169,7 @@ export class AuthenticationService {
       const payload = { userId: user._id, email: user.email, role: user.role };
       const jwtSecret = this.configService.get<string>('JWT_SECRET');
 
-      const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
+      const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '10h' });
 
       return new LoginResponse(accessToken, user._id.toString());
     } catch {

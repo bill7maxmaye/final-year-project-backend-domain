@@ -15,14 +15,19 @@ import s3StorageConfig from '@app/common//config/s3-storage.config';
 import { ReelController } from './controllers/reel/reel.controller';
 import { ReelService } from './controllers/reel/reel.service';
 import databaseConfig from '@app/common//config/database.config';
+import { CommentController as PostCommentController } from './controllers/social/comment/comment.controller';
+import { CommentService } from './controllers/social/comment/comment.service';
+import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
-import { AuthenticationModule } from 'apps/authentication/authentication.module';
+import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
+// import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
   imports: [
-    AuthenticationModule,
+    // AuthenticationModule,
+    UserRepositoryModule,
     ConfigModule.forRoot({
       load: [rabbitmqConfig, socketConfig, s3StorageConfig, databaseConfig],
       isGlobal: true,
@@ -45,6 +50,8 @@ import { AuthenticationModule } from 'apps/authentication/authentication.module'
     // SocialController,
     PostController,
     ReelController,
+    PostCommentController,
+    ReelCommentController,
   ],
   providers: [
     AppService,
@@ -52,6 +59,7 @@ import { AuthenticationModule } from 'apps/authentication/authentication.module'
     PostService,
     ReelService,
     s3Provider,
+    CommentService,
     JwtStrategy,
   ],
 })
