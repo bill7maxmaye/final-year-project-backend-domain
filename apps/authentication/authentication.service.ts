@@ -276,7 +276,10 @@ export class AuthenticationService {
     return user;
   }
 
-  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<UserDocument> {
+  async updateProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<UserDocument> {
     try {
       const user = await this.userRepository.findById(userId);
       if (!user) {
@@ -305,7 +308,10 @@ export class AuthenticationService {
     }
   }
 
-  async followUser(currentUserId: string, targetUserId: string): Promise<UserDocument> {
+  async followUser(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<UserDocument> {
     try {
       // Prevent users from following themselves
       if (currentUserId === targetUserId) {
@@ -362,7 +368,10 @@ export class AuthenticationService {
     }
   }
 
-  async unfollowUser(currentUserId: string, targetUserId: string): Promise<UserDocument> {
+  async unfollowUser(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<UserDocument> {
     try {
       // Prevent users from unfollowing themselves
       if (currentUserId === targetUserId) {
@@ -467,7 +476,10 @@ export class AuthenticationService {
     }
   }
 
-  async checkFollowStatus(currentUserId: string, targetUserId: string): Promise<boolean> {
+  async checkFollowStatus(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<boolean> {
     try {
       const currentUser = await this.userRepository.findById(currentUserId);
       if (!currentUser) {

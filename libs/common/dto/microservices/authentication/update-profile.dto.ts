@@ -20,4 +20,4 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   profilePic?: string;
-} 
+}

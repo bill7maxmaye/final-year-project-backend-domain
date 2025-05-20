@@ -4,4 +4,4 @@ export class CheckUsernameDto {
   @IsString()
   @IsNotEmpty()
   username: string;
-} 
+}
