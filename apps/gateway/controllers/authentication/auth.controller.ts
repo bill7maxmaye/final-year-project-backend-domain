@@ -320,22 +320,22 @@ export class AuthenticationController {
     );
   }
 
-  @Get('get-user')
-  @UseGuards(JwtAuthGuard)
-  async getUser(@ActiveUser() user: User): Promise<UserRto> {
-    console.log('📤 Sending request to Auth Microservice:', user.id);
+  // @Get('get-user')
+  // @UseGuards(JwtAuthGuard)
+  // async getUser(@ActiveUser() user: User): Promise<UserRto> {
+  //   console.log('📤 Sending request to Auth Microservice:', user.id);
 
-    try {
-      const response = await this.networking.send<UserRto>(
-        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
-        user.id,
-      );
+  //   try {
+  //     const response = await this.networking.send<UserRto>(
+  //       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+  //       user.id,
+  //     );
 
-      console.log('📥 Received response from Auth Microservice:', response);
-      return response;
-    } catch (error) {
-      console.error('🔥 Error communicating with Auth Microservice:', error);
-      throw error;
-    }
-  }
+  //     console.log('📥 Received response from Auth Microservice:', response);
+  //     return response;
+  //   } catch (error) {
+  //     console.error('🔥 Error communicating with Auth Microservice:', error);
+  //     throw error;
+  //   }
+  // }
 }
