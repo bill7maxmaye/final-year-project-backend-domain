@@ -290,9 +290,28 @@ export class AuthenticationService {
         );
       }
 
+      // Check if we're updating the username and it's already taken
+      if (updateProfileDto.username) {
+        const existingUser = await this.userRepository
+          .findOne({
+            username: updateProfileDto.username,
+            _id: { $ne: user._id }, // Exclude current user from search
+          })
+          .catch(() => null);
+
+        if (existingUser) {
+          throw MicroserviceException.fromException(
+            'Username already taken',
+            HttpStatus.BAD_REQUEST,
+            MicroserviceErrorCode.INVALID_OPERATION,
+          );
+        }
+      }
+
+      // Update the user with findOneAndUpdate to get the updated document
       const updatedUser = await this.userRepository.findOneAndUpdate(
         { _id: user._id },
-        { ...updateProfileDto },
+        updateProfileDto,
       );
 
       return updatedUser;
@@ -300,8 +319,8 @@ export class AuthenticationService {
       if (error instanceof MicroserviceException) {
         throw error;
       }
-      throw new MicroserviceException(
-        ErrorMessage.INTERNAL_SERVER_ERROR,
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
@@ -360,8 +379,8 @@ export class AuthenticationService {
       if (error instanceof MicroserviceException) {
         throw error;
       }
-      throw new MicroserviceException(
-        ErrorMessage.INTERNAL_SERVER_ERROR,
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
@@ -420,8 +439,8 @@ export class AuthenticationService {
       if (error instanceof MicroserviceException) {
         throw error;
       }
-      throw new MicroserviceException(
-        ErrorMessage.INTERNAL_SERVER_ERROR,
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
@@ -444,8 +463,8 @@ export class AuthenticationService {
       if (error instanceof MicroserviceException) {
         throw error;
       }
-      throw new MicroserviceException(
-        ErrorMessage.INTERNAL_SERVER_ERROR,
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
@@ -468,8 +487,8 @@ export class AuthenticationService {
       if (error instanceof MicroserviceException) {
         throw error;
       }
-      throw new MicroserviceException(
-        ErrorMessage.INTERNAL_SERVER_ERROR,
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
@@ -495,8 +514,8 @@ export class AuthenticationService {
       if (error instanceof MicroserviceException) {
         throw error;
       }
-      throw new MicroserviceException(
-        ErrorMessage.INTERNAL_SERVER_ERROR,
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
@@ -511,8 +530,8 @@ export class AuthenticationService {
       if (error instanceof NotFoundException) {
         return true; // Username is available
       }
-      throw new MicroserviceException(
-        ErrorMessage.INTERNAL_SERVER_ERROR,
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );

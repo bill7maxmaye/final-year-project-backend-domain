@@ -12,12 +12,19 @@ import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Post,
   Put,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { StorageService } from 'apps/gateway/storage/storage.service';
 import { ACTION } from 'libs/common/enum/action.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
@@ -25,14 +32,16 @@ import { NetworkingService } from 'libs/networking';
 
 @Controller('auth')
 export class AuthenticationController {
-  constructor(private readonly networking: NetworkingService) {}
+  constructor(
+    private readonly networking: NetworkingService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto): Promise<any> {
     console.log('📤 Sending request to Auth Microservice:', createUserDto);
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const response = await this.networking.send<UserRto>(
         `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.REGISTER}`,
         createUserDto,
@@ -198,21 +207,135 @@ export class AuthenticationController {
     return { available: isAvailable };
   }
 
-  // @Get('get-user')
-  // async getUser(@Payload() userId: string): Promise<UserRto> {
-  //   console.log('📤 Sending request to Auth Microservice:', userId);
+  @UseGuards(JwtAuthGuard)
+  @Post('upload-profile-picture')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProfilePicture(
+    @ActiveUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new HttpException(
+        'No profile picture provided',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-  //   try {
-  //     const response = await this.networking.send<UserRto>(
-  //       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
-  //       userId,
-  //     );
+    try {
+      // Upload the file to S3
+      const uploadResult = await this.storageService.uploadFile(file);
 
-  //     console.log('📥 Received response from Auth Microservice:', response);
-  //     return response;
-  //   } catch (error) {
-  //     console.error('🔥 Error communicating with Auth Microservice:', error);
-  //     throw error;
-  //   }
-  // }
+      // Get the signed URL
+      const fileSignedUrl = await this.storageService.downloadFile(
+        uploadResult.Location,
+      );
+
+      console.log('File signed URL:', fileSignedUrl);
+      // Update the user profile with the new profile picture URL
+      const updateProfileDto: UpdateProfileDto = {
+        profilePic: uploadResult.Location,
+      };
+
+      const updatedUser = await this.networking.send<UserRto>(
+        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_PROFILE}`,
+        { userId: user.id, updateProfileDto },
+      );
+
+      return {
+        message: 'Profile picture uploaded successfully',
+        user: updatedUser,
+      };
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      throw new HttpException(
+        'Failed to upload profile picture',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete-profile-picture')
+  async removeProfilePicture(@ActiveUser() user: User) {
+    try {
+      // Get the current user to find their profile picture URL
+      const currentUser = await this.networking.send<UserRto>(
+        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+        user.id,
+      );
+
+      // Check if user has a profile picture to delete
+      if (!currentUser || !currentUser.profilePic) {
+        throw new HttpException(
+          'No profile picture to delete',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Extract the key from the profilePic URL
+      // Assuming the URL format is like https://bucket-name.s3.region.amazonaws.com/POC/filename
+      const profilePicUrl = currentUser.profilePic;
+      const key = profilePicUrl.split('/').pop();
+
+      if (key) {
+        try {
+          // Delete the file from S3
+          await this.storageService.deleteFile(`POC/${key}`);
+        } catch (error) {
+          console.error('Error deleting file from S3:', error);
+          // Continue with profile update even if S3 deletion fails
+        }
+      }
+
+      // Update the user profile to remove the profile picture URL
+      const updateProfileDto: UpdateProfileDto = {
+        profilePic: '',
+      };
+
+      const updatedUser = await this.networking.send<UserRto>(
+        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_PROFILE}`,
+        { userId: user.id, updateProfileDto },
+      );
+
+      return {
+        message: 'Profile picture removed successfully',
+        user: updatedUser,
+      };
+    } catch (error) {
+      console.error('Error removing profile picture:', error);
+      throw new HttpException(
+        'Failed to remove profile picture',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getUserProfile(@ActiveUser() user: User): Promise<UserRto> {
+    console.log('📤 Fetching user profile for:', user.id);
+    return this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+      user.id,
+    );
+  }
+
+  @Get('get-user')
+  @UseGuards(JwtAuthGuard)
+  async getUser(@ActiveUser() user: User): Promise<UserRto> {
+    console.log('📤 Sending request to Auth Microservice:', user.id);
+
+    try {
+      const response = await this.networking.send<UserRto>(
+        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+        user.id,
+      );
+
+      console.log('📥 Received response from Auth Microservice:', response);
+      return response;
+    } catch (error) {
+      console.error('🔥 Error communicating with Auth Microservice:', error);
+      throw error;
+    }
+  }
 }
