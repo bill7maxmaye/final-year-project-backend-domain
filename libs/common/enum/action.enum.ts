@@ -127,4 +127,5 @@ export enum ACTION {
   TOGGLE = 'toggle',
   GET_USER = 'get-user',
   CHECK_USERNAME_AVAILABILITY = 'check-username-availability',
+  UPDATE_USERNAME = 'update-username',
 }

@@ -1,5 +1,6 @@
 import { MicroserviceErrorCode, MicroserviceException } from '@app/common';
 import { UserRepository } from '@app/common//baseRepository/userRepository/user.repository';
+import { ChangePasswordDto } from '@app/common//dto/microservices/authentication/change-password.dto';
 import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
 import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
 import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
@@ -17,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { EmailService } from './email.service';
+
 @Injectable()
 export class AuthenticationService {
   constructor(
@@ -536,5 +538,93 @@ export class AuthenticationService {
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<boolean> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+      
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(
+        changePasswordDto.currentPassword,
+        user.password,
+      );
+      
+      if (!isCurrentPasswordValid) {
+        throw MicroserviceException.fromException(
+          'Current password is incorrect',
+          HttpStatus.UNAUTHORIZED,
+          MicroserviceErrorCode.INVALID_CREDENTIALS,
+        );
+      }
+
+      // Check if new password is same as current
+      const isSamePassword = await bcrypt.compare(
+        changePasswordDto.newPassword,
+        user.password,
+      );
+      
+      if (isSamePassword) {
+        throw MicroserviceException.fromException(
+          'New password must be different from current password',
+          HttpStatus.BAD_REQUEST,
+          MicroserviceErrorCode.INVALID_OPERATION,
+        );
+      }
+
+      // Hash and update the new password
+      const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+      await this.userRepository.findOneAndUpdate(
+        { _id: user._id },
+        { password: hashedNewPassword },
+      );
+
+      return true;
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+
+  async updateUsername(userId: string, updateUsernameDto: UpdateProfileDto): Promise<UserDocument> {
+    // Check if username is taken
+    const existingUser = await this.userRepository.findOne({
+      username: updateUsernameDto.username,
+      _id: { $ne: userId },
+    }).catch(() => null);
+  
+    if (existingUser) {
+      throw MicroserviceException.fromException(
+        'Username already taken',
+        HttpStatus.BAD_REQUEST,
+        MicroserviceErrorCode.INVALID_OPERATION,
+      );
+    }
+  
+    // Update username
+    const updatedUser = await this.userRepository.findOneAndUpdate(
+      { _id: userId },
+      { username: updateUsernameDto.username },
+    );
+  
+    return updatedUser;
   }
 }

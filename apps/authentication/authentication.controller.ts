@@ -1,3 +1,4 @@
+import { ChangePasswordDto } from '@app/common//dto/microservices/authentication/change-password.dto';
 import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
 import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
 import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
@@ -166,5 +167,32 @@ export class AuthenticationController {
     @Payload() username: string,
   ): Promise<boolean> {
     return await this.authenticationService.checkUsernameAvailability(username);
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.CHANGE_PASSWORD}`,
+  )
+  async changePassword(
+    @Payload()
+    payload: {
+      userId: string;
+      changePasswordDto: ChangePasswordDto;
+    },
+  ): Promise<boolean> {
+    const { userId, changePasswordDto } = payload;
+    return this.authenticationService.changePassword(userId, changePasswordDto);
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_USERNAME}`,
+  )
+  async updateUsername(
+    @Payload() data: { userId: string; updateUsernameDto: UpdateProfileDto },
+  ): Promise<UserRto> {
+    const response = await this.authenticationService.updateUsername(
+      data.userId,
+      data.updateUsernameDto,
+    );
+    return UserRto.fromEntity(response);
   }
 }
