@@ -18,4 +18,7 @@ export class CreateUserDto {
 
   @IsString()
   gender: string;
+
+  @IsString()
+  username?: string;
 }
