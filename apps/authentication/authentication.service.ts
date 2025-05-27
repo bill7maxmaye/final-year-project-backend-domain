@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { EmailService } from './email.service';
+import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 
 @Injectable()
 export class AuthenticationService {
@@ -630,5 +631,15 @@ export class AuthenticationService {
 
   async getAllUsers(): Promise<UserDocument[]> {
     return this.userRepository.find({});
+  }
+
+  async searchUsers(query: string): Promise<UserDocument[]> {
+    return this.userRepository.find({
+      $or: [
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
+        { username: { $regex: query, $options: 'i' } },
+      ],
+    });
   }
 }

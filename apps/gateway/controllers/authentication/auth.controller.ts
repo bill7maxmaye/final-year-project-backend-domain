@@ -20,6 +20,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -383,5 +384,21 @@ export class AuthenticationController {
       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_ALL_USERS}`,
       {},
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('search-users')
+  async searchUsers(
+    @Query('q') query: string,
+    @ActiveUser() user: UserRto,
+  ): Promise<UserRto[]> {
+    console.log('📤 >>>>>><<<<<<<<<<<<<<<<<<<<<< query:', query);
+
+    const res = await this.networking.send<UserRto[]>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.SEARCH_USERS}`,
+      { query, currentUserId: user.id },
+    );
+    console.log('📥 <<<<<<<<<<Received response from Auth Microservice:', res);
+    return res;
   }
 }
