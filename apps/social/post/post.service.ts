@@ -3,6 +3,7 @@ import { PostReportRepository } from '@app/common//baseRepository/social/post-re
 import { PostReportDto } from '@app/common//dto/gateway/social/post/post-report.dto';
 import { CreatePostDto } from '@app/common//dto/microservices/social/post/create-post.dto';
 import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
+import { PostReportDocument } from '@app/common//models/social/post-report.model';
 import { PostDocument } from '@app/common//models/social/post.model';
 import { FindResult } from '@app/common//rto/find-result';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -87,6 +88,14 @@ export class PostService {
     }
   }
 
+  async findByContentId(contentId: string): Promise<PostReportDocument[]> {
+    const response = await this.postReportRepository
+      .find({ content_id: contentId })
+      .exec();
+
+    return response;
+  }
+
   async getById(id: string): Promise<PostDocument> {
     return this.postRepository.findOne({ _id: id });
   }
@@ -147,6 +156,33 @@ export class PostService {
     }
     */
 
+  async resolveReport(
+    reportId: string,
+    resolvedBy: string,
+  ): Promise<{ success: boolean }> {
+    try {
+      console.log('Resolving report with ID:', reportId);
+      const report = await this.postReportRepository.findOneAndUpdate(
+        { _id: reportId },
+        {
+          status: 'RESOLVED',
+          resolvedBy,
+          resolvedAt: new Date(),
+        },
+      );
+      console.log('Report found:', report);
+      if (!report) {
+        console.log('Report not found>>>>>');
+        throw new NotFoundException(`Report with ID ${reportId} not found`);
+      }
+      console.log('Report resolved:', report);
+      return { success: true };
+    } catch (error) {
+      console.error('Error resolving report:', error);
+      return { success: false };
+    }
+  }
+
   async reportPost(report: PostReportDto): Promise<{ success: boolean }> {
     try {
       console.log('Reporting post:', report);
@@ -163,6 +199,7 @@ export class PostService {
           `Post with ID ${report.content_id} not found`,
         );
       }
+      
 
       console.log('Post found>>>:', post);
 
