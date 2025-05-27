@@ -61,12 +61,10 @@ export class PostController {
   ): Promise<PostGatewayRto> {
     const uploadResult =
       files && (await this.storageService.uploadMultipleFiles(files));
-    console.log('userId', user);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const post = CreatePostDto.fromCreate(body, uploadResult, user.id);
     console.log('post', post);
 
-    console.log('post', post);
     const response = await this.networking.send<PostRto>(
       `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.CREATE}`,
       post,
@@ -159,7 +157,6 @@ export class PostController {
         },
       );
 
-      console.log('Fetched posts:', response.data);
 
       // Get unique author IDs from all posts
       const authorIds = [
