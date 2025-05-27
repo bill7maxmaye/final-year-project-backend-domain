@@ -94,6 +94,22 @@ export class AuthenticationController {
   }
 
   @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER_BY_ID}`,
+  )
+  async getUserById(@Payload() userId: string): Promise<UserRto> {
+    const response = await this.authenticationService.getUser(userId);
+    return UserRto.fromEntity(response);
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_ALL_USERS}`,
+  )
+  async getAllUsers(): Promise<UserRto[]> {
+    const users = await this.authenticationService.getAllUsers();
+    return users.map((user) => UserRto.fromEntity(user));
+  }
+
+  @MessagePattern(
     `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_PROFILE}`,
   )
   async updateProfile(

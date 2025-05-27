@@ -128,4 +128,6 @@ export enum ACTION {
   GET_USER = 'get-user',
   CHECK_USERNAME_AVAILABILITY = 'check-username-availability',
   UPDATE_USERNAME = 'update-username',
+  GET_USER_BY_ID = 'get-user-by-id',
+  GET_ALL_USERS = 'get-all-users',
 }

@@ -627,4 +627,8 @@ export class AuthenticationService {
   
     return updatedUser;
   }
+
+  async getAllUsers(): Promise<UserDocument[]> {
+    return this.userRepository.find({});
+  }
 }

@@ -367,4 +367,21 @@ export class AuthenticationController {
       { userId: user.id, updateUsernameDto },
     );
   }
+  @UseGuards(JwtAuthGuard)
+  @Get('user/:id')
+  async getUserById(@Param('id') id: string): Promise<UserRto> {
+    return this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER_BY_ID}`,
+      id,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('users')
+  async getAllUsers(): Promise<UserRto[]> {
+    return this.networking.send<UserRto[]>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_ALL_USERS}`,
+      {},
+    );
+  }
 }
