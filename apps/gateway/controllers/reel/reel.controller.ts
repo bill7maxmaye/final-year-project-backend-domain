@@ -178,6 +178,30 @@ export class ReelController {
     }
   }
 
+  @Get('report')
+  async getReportsByEntityId(
+    @Query('reportedEntityId') reportedEntityId: string,
+    @Query('reportedEntityType') reportedEntityType: ReportedEntityType,
+  ) {
+    try {
+      console.log(`Handling ${reportedEntityId} , ${reportedEntityType}`);
+      const report = await this.networking.send<ReportRto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.GET_REPORTS_BY_ENTITY}`,
+        {
+          reportedEntityType: reportedEntityType,
+          reportedEntityId: reportedEntityId,
+        },
+      );
+      return report;
+    } catch (error) {
+      this.logger.error(`Error getting report ${reportedEntityId}:`, error);
+      throw new HttpException(
+        'Failed to get report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Get('many')
   async getMany(
     @ActiveUser() user: User,
@@ -420,29 +444,6 @@ export class ReelController {
       return report;
     } catch (error) {
       this.logger.error(`Error getting report ${id}:`, error);
-      throw new HttpException(
-        'Failed to get report',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  @Get()
-  async getReportsByEntityId(
-    @Query('reportedEntityId') reportedEntityId: string,
-    @Query('reportedEntityType') reportedEntityType: ReportedEntityType,
-  ) {
-    try {
-      const report = await this.networking.send<ReportRto>(
-        `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.GET_REPORTS_BY_ENTITY}`,
-        {
-          reportedEntityType: reportedEntityType,
-          reportedEntityId: reportedEntityId,
-        },
-      );
-      return report;
-    } catch (error) {
-      this.logger.error(`Error getting report ${reportedEntityId}:`, error);
       throw new HttpException(
         'Failed to get report',
         HttpStatus.INTERNAL_SERVER_ERROR,
