@@ -392,13 +392,10 @@ export class AuthenticationController {
     @Query('q') query: string,
     @ActiveUser() user: UserRto,
   ): Promise<UserRto[]> {
-    console.log('📤 >>>>>><<<<<<<<<<<<<<<<<<<<<< query:', query);
-
     const res = await this.networking.send<UserRto[]>(
       `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.SEARCH_USERS}`,
       { query, currentUserId: user.id },
     );
-    console.log('📥 <<<<<<<<<<Received response from Auth Microservice:', res);
     return res;
   }
 }
