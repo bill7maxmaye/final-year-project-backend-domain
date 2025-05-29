@@ -1,3 +1,4 @@
+import { ChangePasswordDto } from '@app/common//dto/microservices/authentication/change-password.dto';
 import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
 import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
 import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
@@ -102,6 +103,22 @@ export class AuthenticationController {
   }
 
   @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER_BY_ID}`,
+  )
+  async getUserById(@Payload() userId: string): Promise<UserRto> {
+    const response = await this.authenticationService.getUser(userId);
+    return UserRto.fromEntity(response);
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_ALL_USERS}`,
+  )
+  async getAllUsers(): Promise<UserRto[]> {
+    const users = await this.authenticationService.getAllUsers();
+    return users.map((user) => UserRto.fromEntity(user));
+  }
+
+  @MessagePattern(
     `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_PROFILE}`,
   )
   async updateProfile(
@@ -175,5 +192,49 @@ export class AuthenticationController {
     @Payload() username: string,
   ): Promise<boolean> {
     return await this.authenticationService.checkUsernameAvailability(username);
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.CHANGE_PASSWORD}`,
+  )
+  async changePassword(
+    @Payload()
+    payload: {
+      userId: string;
+      changePasswordDto: ChangePasswordDto;
+    },
+  ): Promise<boolean> {
+    const { userId, changePasswordDto } = payload;
+    return this.authenticationService.changePassword(userId, changePasswordDto);
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_USERNAME}`,
+  )
+  async updateUsername(
+    @Payload() data: { userId: string; updateUsernameDto: UpdateProfileDto },
+  ): Promise<UserRto> {
+    const response = await this.authenticationService.updateUsername(
+      data.userId,
+      data.updateUsernameDto,
+    );
+    return UserRto.fromEntity(response);
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.SEARCH_USERS}`,
+  )
+  async searchUsers(
+    @Payload() data: { query: string; currentUserId: string },
+  ): Promise<any[]> {
+    const users = await this.authenticationService.searchUsers(data.query);
+    return users.map((user) => {
+      const dto = UserRto.fromEntity(user);
+
+      return {
+        ...dto,
+        isFollowing: user.followers.includes(data.currentUserId),
+      };
+    });
   }
 }

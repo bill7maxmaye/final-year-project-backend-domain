@@ -1,4 +1,5 @@
 import { ActiveUser } from '@app/common//decorators/active-user-decorator';
+import { ChangePasswordDto } from '@app/common//dto/microservices/authentication/change-password.dto';
 import { ForgotPasswordDto } from '@app/common//dto/microservices/authentication/forgot-password.dto';
 import { LoginUserDto } from '@app/common//dto/microservices/authentication/login-user.dto';
 import { ResetPasswordDto } from '@app/common//dto/microservices/authentication/reset-password.dto';
@@ -19,6 +20,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -338,4 +340,62 @@ export class AuthenticationController {
   //     throw error;
   //   }
   // }
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @ActiveUser() user: User,
+  ): Promise<boolean> {
+    console.log('📤 Sending CHANGE PASSWORD request to Auth Microservice');
+
+    return this.networking.send<boolean>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.CHANGE_PASSWORD}`,
+      {
+        userId: user.id,
+        changePasswordDto,
+      },
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('update-username')
+  async updateUsername(
+    @ActiveUser() user: User,
+    @Body() updateUsernameDto: UpdateProfileDto,
+  ): Promise<UserRto> {
+    return this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.UPDATE_USERNAME}`,
+      { userId: user.id, updateUsernameDto },
+    );
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('user/:id')
+  async getUserById(@Param('id') id: string): Promise<UserRto> {
+    return this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER_BY_ID}`,
+      id,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('users')
+  async getAllUsers(): Promise<UserRto[]> {
+    return this.networking.send<UserRto[]>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_ALL_USERS}`,
+      {},
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('search-users')
+  async searchUsers(
+    @Query('q') query: string,
+    @ActiveUser() user: UserRto,
+  ): Promise<UserRto[]> {
+    const res = await this.networking.send<UserRto[]>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.SEARCH_USERS}`,
+      { query, currentUserId: user.id },
+    );
+    return res;
+  }
 }
