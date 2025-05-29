@@ -29,7 +29,16 @@ export class AuthenticationController {
     @Payload() createUserDto: CreateUserDto,
   ): Promise<UserRto> {
     console.log('received data', createUserDto);
-    const response = await this.authenticationService.createUser(createUserDto);
+    const baseUsername = createUserDto.firstName
+      .toLowerCase()
+      .replace(/\s+/g, '');
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 1000-9999
+    const username = `${baseUsername}${randomSuffix}`;
+
+    const response = await this.authenticationService.createUser({
+      ...createUserDto,
+      username: username,
+    });
     return UserRto.fromEntity(response);
   }
 

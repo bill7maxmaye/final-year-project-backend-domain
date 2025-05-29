@@ -21,6 +21,9 @@ export class PostDocument extends BaseDocument {
     default: [],
   })
   likedBy: string[];
+
+  @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
+  mentions?: string[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(PostDocument);

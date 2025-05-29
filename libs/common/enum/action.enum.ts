@@ -89,6 +89,8 @@ export enum ACTION {
   EXPLORE = 'explore',
   RECOMMENDATIONS = 'recommendations',
   LOCATIONS = 'locations',
+  GET_REPORTS = 'get-reports',
+  RESOLVE_REPORT = 'resolve-report',
 
   // 8. Messaging
   SEND_MESSAGE = 'send-message',

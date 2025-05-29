@@ -100,7 +100,14 @@ export class CommentController {
       { id, data: updatedComment },
     );
 
-    return response;
+    const owner = await this.networking.send<UserRto>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+      response.authorId,
+    );
+
+    const result = CommentGatewayRto.fromComment(response, owner);
+
+    return result;
   }
 
   @Delete('comments/:id')
@@ -135,9 +142,9 @@ export class CommentController {
   @Get('comments')
   async listAll(
     @Query() query: ListAllDto,
-    @ActiveUser() user: User,
-  ): Promise<FindResult<CommentRto>> {
+  ): Promise<FindResult<CommentGatewayRto>> {
     try {
+      // First fetch all comments
       const response = await this.networking.send<FindResult<CommentRto>>(
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.LIST_ALL}`,
         {
@@ -145,25 +152,51 @@ export class CommentController {
         },
       );
 
-      const owner = await this.networking.send<UserRto>(
-        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
-        user.id,
+      // Get unique owner IDs from all comments
+      const ownerIds = [
+        ...new Set(response.data.map((comment) => comment.authorId!)),
+      ];
+
+      // Fetch all owners in a single batch request if your API supports it
+      const owners = await Promise.all(
+        ownerIds.map((ownerId) =>
+          this.networking.send<UserRto>(
+            `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+            ownerId,
+          ),
+        ),
       );
 
-      const result = response.data.map((item) =>
-        CommentGatewayRto.fromComment(item, owner),
-      );
+      // Create a map of ownerId -> owner for quick lookup
+      const ownerMap = new Map<string, UserRto>();
+      owners.forEach((owner, index) => {
+        ownerMap.set(ownerIds[index], owner);
+      });
+
+      // Map comments with their respective owners
+      const comments = response.data.map((comment) => {
+        const owner = ownerMap.get(comment.authorId!);
+        if (!owner) {
+          this.logger.warn(
+            `Owner not found for comment ${comment.id} with owner ${comment.authorId}`,
+          );
+          // You might want to handle this case differently - either throw or continue with minimal data
+          throw new Error(`Owner not found for comment ${comment.id}`);
+        }
+
+        console.log('Mapping comment:', comment, 'with owner:', owner);
+        return CommentGatewayRto.fromComment(comment, owner);
+      });
 
       return {
-        data: result,
+        data: comments,
         total: response.total,
       };
     } catch (error) {
-      this.logger.error('Error listing posts', error.stack);
+      this.logger.error('Error listing comments', error.stack);
       throw error;
     }
   }
-
   @Get('comments/:id')
   async getById(@Param('id') id: string): Promise<CommentRto> {
     console.log('receiving data', id);
@@ -191,26 +224,59 @@ export class CommentController {
   @Get('posts/:id/comments')
   async getCommentsForSinglePost(
     @Param('id') id: string,
-    @ActiveUser() user: User,
+    // @ActiveUser() user: User,
   ): Promise<CommentGatewayRto[]> {
-    console.log('receiving data', id);
+    this.logger.log(`Retrieving comments for post ${id}`);
     try {
-      const response = await this.networking.send<CommentRto[]>(
+      // Fetch comments for a single post
+      const comments = await this.networking.send<CommentRto[]>(
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.RETRIEVE_ALL}`,
         id,
       );
 
-      const owner = await this.networking.send<UserRto>(
-        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
-        user.id,
+      // Extract unique author IDs
+      const ownerIds = [
+        ...new Set(comments.map((comment) => comment.authorId)),
+      ];
+
+      // Fetch all owners in batch
+      const owners = await Promise.all(
+        ownerIds.map((ownerId) =>
+          this.networking.send<UserRto>(
+            `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+            ownerId,
+          ),
+        ),
       );
-      const result = response.map((item) =>
-        CommentGatewayRto.fromComment(item, owner),
-      );
+
+      // Map ownerId -> owner object
+      const ownerMap = new Map<string, UserRto>();
+      owners.forEach((owner, index) => {
+        const ownerId = ownerIds[index];
+        if (ownerId) {
+          ownerMap.set(ownerId, owner);
+        }
+      });
+
+      // Map each comment to its gateway RTO with owner info
+      const result = comments.map((comment) => {
+        const owner = ownerMap.get(comment.authorId!);
+        if (!owner) {
+          this.logger.warn(
+            `Owner not found for comment ${comment.id} by author ${comment.authorId}`,
+          );
+          throw new Error(`Owner not found for comment ${comment.id}`);
+        }
+
+        return CommentGatewayRto.fromComment(comment, owner);
+      });
 
       return result;
     } catch (error) {
-      this.logger.error(`Error retrieving post ${id}`, error.stack);
+      this.logger.error(
+        `Error retrieving comments for post ${id}`,
+        error.stack,
+      );
       throw error;
     }
   }

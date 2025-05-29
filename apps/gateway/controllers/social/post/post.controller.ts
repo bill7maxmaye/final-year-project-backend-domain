@@ -34,6 +34,7 @@ import { User } from '@app/common//entities/user/user-entity';
 import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
 import { PostGatewayRto } from '@app/common//rto/gateway/social/post/post-gateway.rto';
 import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
+import { PostReportRto } from '@app/common//rto/social/post/post-report.rto';
 
 @Controller('social')
 @UseGuards(JwtAuthGuard)
@@ -60,12 +61,10 @@ export class PostController {
   ): Promise<PostGatewayRto> {
     const uploadResult =
       files && (await this.storageService.uploadMultipleFiles(files));
-    console.log('userId', user);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const post = CreatePostDto.fromCreate(body, uploadResult, user.id);
     console.log('post', post);
 
-    console.log('post', post);
     const response = await this.networking.send<PostRto>(
       `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.CREATE}`,
       post,
@@ -147,7 +146,10 @@ export class PostController {
     @Query() query: ListAllDto,
     @ActiveUser() user: User,
   ): Promise<FindResult<PostGatewayRto>> {
+    console.log('Listing all posts with query:', query);
+    console.log('Active user:', user);
     try {
+      // First fetch all posts
       const response = await this.networking.send<FindResult<PostRto>>(
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIST_ALL}`,
         {
@@ -155,14 +157,40 @@ export class PostController {
         },
       );
 
-      const owner = await this.networking.send<UserRto>(
-        `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
-        user.id,
+
+      // Get unique author IDs from all posts
+      const authorIds = [
+        ...new Set(response.data.map((post) => post.authorId)),
+      ];
+
+      // Fetch all owners in a single batch request if your API supports it
+      const owners = await Promise.all(
+        authorIds.map((authorId) =>
+          this.networking.send<UserRto>(
+            `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+            authorId,
+          ),
+        ),
       );
 
-      const posts = response.data.map((post) =>
-        PostGatewayRto.fromEntity(post, owner),
-      );
+      // Create a map of authorId -> owner for quick lookup
+      const ownerMap = new Map<string, UserRto>();
+      owners.forEach((owner, index) => {
+        ownerMap.set(authorIds[index], owner);
+      });
+
+      // Map posts with their respective owners
+      const posts = response.data.map((post) => {
+        const owner = ownerMap.get(post.authorId);
+        if (!owner) {
+          this.logger.warn(
+            `Owner not found for post ${post.id} with author ${post.authorId}`,
+          );
+          // You might want to handle this case differently
+          throw new Error(`Owner not found for post ${post.id}`);
+        }
+        return PostGatewayRto.fromEntity(post, owner);
+      });
 
       return {
         data: posts,
@@ -173,7 +201,6 @@ export class PostController {
       throw error;
     }
   }
-
   @Get('posts/:id')
   async getById(@Param('id') id: string): Promise<PostRto> {
     try {
@@ -198,6 +225,31 @@ export class PostController {
     const response = await this.networking.send<{ success: boolean }>(
       `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.REPORT}`,
       { ...body, content_id: id },
+    );
+    return response;
+  }
+
+  @Get('posts/:id/reports')
+  async getPostReport(
+    @Param('id') id: string,
+  ): Promise<{ report: PostReportRto[] }> {
+    const response = await this.networking.send<{
+      report: PostReportRto[];
+    }>(
+      `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.GET_REPORTS}`,
+      { content_id: id },
+    );
+    return response;
+  }
+
+  @Post('posts/reports/:id/resolve')
+  async reportResolve(
+    @Param('id') id: string,
+    @ActiveUser() user,
+  ): Promise<{ success: boolean }> {
+    const response = await this.networking.send<{ success: boolean }>(
+      `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.RESOLVE_REPORT}`,
+      { reportId: id, resolvedBy: user.id },
     );
     return response;
   }
