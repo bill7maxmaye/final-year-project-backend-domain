@@ -219,9 +219,6 @@ export class AuthenticationController {
     @Payload() data: { query: string; currentUserId: string },
   ): Promise<any[]> {
     const users = await this.authenticationService.searchUsers(data.query);
-    console.log('searchUsers data', data);
-    console.log('searchUsers users', users);
-    console.log('searchUsers currentUserId', data.currentUserId);
     return users.map((user) => {
       const dto = UserRto.fromEntity(user);
 
