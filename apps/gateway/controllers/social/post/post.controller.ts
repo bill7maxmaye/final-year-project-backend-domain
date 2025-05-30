@@ -157,7 +157,6 @@ export class PostController {
         },
       );
 
-
       // Get unique author IDs from all posts
       const authorIds = [
         ...new Set(response.data.map((post) => post.authorId)),
@@ -201,6 +200,83 @@ export class PostController {
       throw error;
     }
   }
+
+  @Get('posts/search')
+  async searchPosts(
+    @Query() query: ListAllDto,
+  ): Promise<FindResult<PostGatewayRto>> {
+    console.log('Raw search query in gateway:', query);
+    this.logger.log(`Searching posts with query: ${JSON.stringify(query)}`);
+
+    if (!query.search || !query.search.trim()) {
+      this.logger.log('No search term provided, returning empty results');
+      return { data: [], total: 0 };
+    }
+
+    try {
+      const searchQuery = {
+        ...query,
+        search: query.search.trim(),
+      };
+      
+      this.logger.log(`Sending search query to service: ${JSON.stringify(searchQuery)}`);
+
+      // First search posts based on content
+      const response = await this.networking.send<FindResult<PostRto>>(
+        `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.SEARCH}`,
+        searchQuery,
+      );
+
+      this.logger.log('Search response:', {
+        total: response.total,
+        found: response.data.length,
+        firstResult: response.data[0]?.content?.substring(0, 100),
+        searchTerm: searchQuery.search,
+      });
+
+      // Get unique author IDs from the search results
+      const authorIds = [
+        ...new Set(response.data.map((post) => post.authorId)),
+      ];
+
+      // Fetch all owners in a single batch request
+      const owners = await Promise.all(
+        authorIds.map((authorId) =>
+          this.networking.send<UserRto>(
+            `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+            authorId,
+          ),
+        ),
+      );
+
+      // Create a map of authorId -> owner for quick lookup
+      const ownerMap = new Map<string, UserRto>();
+      owners.forEach((owner, index) => {
+        ownerMap.set(authorIds[index], owner);
+      });
+
+      // Map posts with their respective owners
+      const posts = response.data.map((post) => {
+        const owner = ownerMap.get(post.authorId);
+        if (!owner) {
+          this.logger.warn(
+            `Owner not found for post ${post.id} with author ${post.authorId}`,
+          );
+          throw new Error(`Owner not found for post ${post.id}`);
+        }
+        return PostGatewayRto.fromEntity(post, owner);
+      });
+
+      return {
+        data: posts,
+        total: response.total,
+      };
+    } catch (error) {
+      this.logger.error('Error searching posts', error.stack);
+      throw error;
+    }
+  }
+
   @Get('posts/:id')
   async getById(@Param('id') id: string): Promise<PostRto> {
     try {
