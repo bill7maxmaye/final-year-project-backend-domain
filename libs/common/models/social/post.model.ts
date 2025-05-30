@@ -27,3 +27,6 @@ export class PostDocument extends BaseDocument {
 }
 
 export const PostSchema = SchemaFactory.createForClass(PostDocument);
+
+// Add text index for content search
+PostSchema.index({ content: 'text' });

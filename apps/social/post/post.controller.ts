@@ -171,4 +171,28 @@ export class PostController {
       throw error;
     }
   }
+
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.SEARCH}`,
+  )
+  async searchPosts(
+    @Payload() payload: ListAllDto,
+  ): Promise<FindResult<PostRto>> {
+    try {
+      this.logger.log(`Searching posts with query: ${JSON.stringify(payload)}`);
+
+      // Make sure we're calling the correct service method
+      const result = await this.service.searchPostsByContent(payload);
+
+      return new FindResult<PostRto>(
+        result.data.map((item) => PostRto.fromEntity(item)),
+        result.total,
+        result.next,
+        result.previous,
+      );
+    } catch (error) {
+      this.logger.error('Error searching posts:', error);
+      throw error;
+    }
+  }
 }
