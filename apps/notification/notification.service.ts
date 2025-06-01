@@ -33,6 +33,7 @@ export class NotificationService {
 
   async getNotifications(userId: string): Promise<Notification[]> {
     const id = new Types.ObjectId(userId);
+    console.log('User ID:', id);
     const notifications = await this.repository.find({ receiverId: id });
     if (!notifications) {
       throw new Error('Failed to fetch notifications');

@@ -1,9 +1,10 @@
 import { ActiveUser } from '@app/common//decorators/active-user-decorator';
 import { Notification } from '@app/common//entities/notification/notification.entity';
 import { User } from '@app/common//entities/user/user-entity';
+import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
 import { NotificationsGatewayRTO } from '@app/common//rto/gateway/notification/notifications-gateway.rto';
 import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { EventPattern } from '@nestjs/microservices';
 import { SocketGateway } from 'apps/gateway/websocket/socket.gateway';
 import { ACTION } from 'libs/common/enum/action.enum';
@@ -13,6 +14,7 @@ import { NetworkingService } from 'libs/networking';
 import { lastValueFrom } from 'rxjs/internal/lastValueFrom';
 
 @Controller('notifications')
+@UseGuards(JwtAuthGuard)
 export class NotificationsController {
   constructor(
     private readonly networking: NetworkingService,
@@ -20,7 +22,7 @@ export class NotificationsController {
   ) {}
 
   @Post('create')
-  async create(@Body() createNotificationDto: any): Promise<any> {
+  create(@Body() createNotificationDto: any): any {
     console.log(
       '📤 Sending request to Notification Microservice:',
       createNotificationDto,
@@ -28,20 +30,20 @@ export class NotificationsController {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const response = await lastValueFrom(
-        this.networking
-          .send(
-            `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
-            {},
-          )
-          .pipe(defaultIfEmpty(null)), // ← This avoids EmptyError
-      );
+      // const response = await lastValueFrom(
+      //   this.networking
+      //     .send(
+      //       `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
+      //       {},
+      //     )
+      //     .pipe(defaultIfEmpty(null)), // ← This avoids EmptyError
+      // );
 
-      console.log(
-        '📥 Received response from Notifications Microservice:',
-        response,
-      );
-      return response;
+      // console.log(
+      //   '📥 Received response from Notifications Microservice:',
+      //   response,
+      // );
+      // return response;
     } catch (error) {
       console.error(
         '🔥 Error communicating with Notifications Microservice:',
@@ -55,10 +57,10 @@ export class NotificationsController {
   async getNotifications(
     @ActiveUser() user: User,
   ): Promise<NotificationsGatewayRTO[]> {
-    console.log(user);
+    console.log(`user id is ${user.id}`);
     const notifications = await this.networking.send<Notification[]>(
       `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.RETRIEVE}`,
-      user,
+      user.id,
     );
 
     const aggregatedNotification = notifications.map(async (notification) => {

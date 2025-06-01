@@ -30,6 +30,7 @@ export class NetworkingService {
       [MICROSERVICE.AUTHENTICATION, this.authClient],
       [MICROSERVICE.REELS, this.reelsClient],
       [MICROSERVICE.NOTIFICATION, this.notificationClient],
+      [MICROSERVICE.CHAT, this.chatClient],
       // Add other mappings
     ]);
   }

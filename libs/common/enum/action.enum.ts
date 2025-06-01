@@ -119,4 +119,9 @@ export enum ACTION {
   RECEIVED = 'received',
   SENT = 'sent',
 
+
+  // 11. Chat
+
+  GET_CHAT_LIST = 'get-chat-list',
+  CREATE_MANY = 'create-many',
 }

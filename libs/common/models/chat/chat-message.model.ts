@@ -36,9 +36,6 @@ export class ChatMessageDocument extends BaseDocument {
   @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'User', default: [] })
   mentionedUserIds: Types.ObjectId[];
 
-  @Prop({ type: Number, default: 0 })
-  viewCount: number;
-
   @Prop({ type: Boolean, default: false })
   isDeleted: boolean;
 

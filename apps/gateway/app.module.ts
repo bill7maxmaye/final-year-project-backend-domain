@@ -23,6 +23,9 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
 import { AuthenticationModule } from 'apps/authentication/authentication.module';
 import { SocketGateway } from './websocket/socket.gateway';
+import { ChatModule } from 'apps/chat/chat.module';
+import { ChatController } from './controllers/chat/chat/chat.controller';
+import { ChatService } from './controllers/chat/chat/chat.service';
 
 @Module({
   imports: [
@@ -33,6 +36,7 @@ import { SocketGateway } from './websocket/socket.gateway';
     }),
     NetworkingModule,
     StorageModule,
+    ChatModule,
     SocketModule,
     // NotificationsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -52,11 +56,13 @@ import { SocketGateway } from './websocket/socket.gateway';
     PostController,
     ReelController,
     NotificationsController,
+    ChatController,
   ],
   providers: [
     AppService,
     SocialService,
     PostService,
+    ChatService,
     ReelService,
     s3Provider,
     JwtStrategy,

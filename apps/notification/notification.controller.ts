@@ -17,8 +17,9 @@ export class NotificationController {
   @MessagePattern(
     `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.RETRIEVE}`,
   )
-  async handleNotification(user: User): Promise<Notification[]> {
-    return await this.notificationService.getNotifications(user.id);
+  async handleNotification(userId: string): Promise<Notification[]> {
+    console.log('Received user ID:', userId);
+    return await this.notificationService.getNotifications(userId);
   }
 
   @MessagePattern(

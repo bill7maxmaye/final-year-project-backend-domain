@@ -7,8 +7,8 @@ export class ChatAttachmentDocument extends BaseDocument {
   @Prop({ type: String, required: true })
   url: string;
 
-  @Prop({ type: String, enum: ['image', 'video', 'file'], required: true })
-  type: 'image' | 'video' | 'file';
+  @Prop({ type: String, required: true })
+  type: string;
 
   @Prop({ type: String })
   fileName?: string;

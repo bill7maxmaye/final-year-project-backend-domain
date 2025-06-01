@@ -48,6 +48,7 @@ export enum CONTROLLER {
   MESSAGE_SEARCH = 'message-search',
   SAVED_MESSAGES = 'saved-messages',
   PINNED_MESSAGES = 'pinned-messages',
+  ATTACHMENTS = 'attachments',
 
   // 9. Settings
   LANGUAGES = 'languages',
