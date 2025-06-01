@@ -10,4 +10,19 @@ export class CreateNotificationDto {
     public readonly entityIds: Types.ObjectId[],
     public readonly senders: Types.ObjectId[],
   ) {}
+
+  static fromLikePost(
+    receiverId: Types.ObjectId,
+    postId: Types.ObjectId,
+    senderId: Types.ObjectId,
+  ): CreateNotificationDto {
+    return new CreateNotificationDto(
+      receiverId,
+      `User Liked Your Post`,
+      NotificationType.LIKE,
+      false,
+      [postId],
+      [senderId],
+    );
+  }
 }

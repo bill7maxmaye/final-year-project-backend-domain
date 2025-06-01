@@ -3,3 +3,4 @@ export const REELS_RMQ_CLIENT = Symbol('REELS_RMQ_CLIENT');
 export const NOTIFICATION_RMQ_CLIENT = Symbol('NOTIFICATION_RMQ_CLIENT');
 export const CHAT_RMQ_CLIENT = Symbol('CHAT_RMQ_CLIENT');
 export const SOCIAL_RMQ_CLIENT = Symbol('SOCIAL_RMQ_CLIENT');
+export const GATEWAY_RMQ_CLIENT = Symbol('GATEWAY_RMQ_CLIENT');

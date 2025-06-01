@@ -18,7 +18,7 @@ export class Notification extends BaseEntity {
 
   static fromDocument(document: NotificationDocument): Notification {
     return new Notification(
-      document.id,
+      document._id.toString(),
       document.createdAt,
       document.updatedAt,
       document.receiverId.toString(),
