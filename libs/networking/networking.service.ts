@@ -1,14 +1,13 @@
-// libs/networking/src/networking.service.ts
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-// Import unique tokens
 import {
   AUTHENTICATION_RMQ_CLIENT,
   NOTIFICATION_RMQ_CLIENT,
   REELS_RMQ_CLIENT,
   CHAT_RMQ_CLIENT,
+  SOCIAL_RMQ_CLIENT,
 } from 'libs/common/constant/microservice-client-tokens.constant';
-import { MICROSERVICE } from 'libs/common/enum/microservice.enum'; // Import MICROSERVICE enum
+import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
 import { lastValueFrom } from 'rxjs';
 
 @Injectable()
@@ -17,26 +16,27 @@ export class NetworkingService {
   private readonly clients: Map<MICROSERVICE, ClientProxy>;
 
   constructor(
-    // Inject clients using their unique tokens
     @Inject(AUTHENTICATION_RMQ_CLIENT) private readonly authClient: ClientProxy,
     @Inject(REELS_RMQ_CLIENT) private readonly reelsClient: ClientProxy,
     @Inject(CHAT_RMQ_CLIENT) private readonly chatClient: ClientProxy,
     @Inject(NOTIFICATION_RMQ_CLIENT)
     private readonly notificationClient: ClientProxy,
+    @Inject(SOCIAL_RMQ_CLIENT) private readonly socialClient: ClientProxy,
     // Add other clients here
   ) {
-    // Map microservice enums to their respective clients
     this.clients = new Map<MICROSERVICE, ClientProxy>([
       [MICROSERVICE.AUTHENTICATION, this.authClient],
       [MICROSERVICE.REELS, this.reelsClient],
       [MICROSERVICE.NOTIFICATION, this.notificationClient],
       [MICROSERVICE.CHAT, this.chatClient],
+      [MICROSERVICE.SOCIAL, this.socialClient],
       // Add other mappings
     ]);
   }
 
   // Helper to get the correct client based on the microservice enum
   private getClient(microservice: MICROSERVICE): ClientProxy {
+    console.log('Getting client for microservice:', microservice);
     const client = this.clients.get(microservice);
     if (!client) {
       throw new Error(`Client not found for microservice: ${microservice}`);

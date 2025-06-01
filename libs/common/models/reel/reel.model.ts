@@ -1,11 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { BaseDocument, BaseSchema } from '../base.model';
 import { ReelPrivacy } from '../../enum/reel/reel-visibility.enum';
-import {
-  MentionedUserDocument,
-  MentionedUserSchema,
-} from './mentioned-user.model';
-
 @Schema({
   collection: 'reels',
 })
@@ -28,8 +23,8 @@ export class ReelDocument extends BaseDocument {
   @Prop({ type: [String], default: [] })
   hashtags: string[];
 
-  @Prop({ type: [MentionedUserSchema], default: [] })
-  mentionedUsers: MentionedUserDocument[];
+  @Prop({ type: [String], default: [] })
+  mentionedUserIds: string[];
 
   @Prop({ type: String, enum: ReelPrivacy, default: ReelPrivacy.PUBLIC })
   privacy: ReelPrivacy;

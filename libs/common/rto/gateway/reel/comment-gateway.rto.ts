@@ -1,39 +1,53 @@
-import { Comment } from '@app/common//entities/reel/comment.entity';
 import { ProfileSummaryRto } from './profile-summary.rto';
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
+import { CommentRto } from '../../microservices/reel/comment.rto';
 
 export class CommentGatewayRto {
   constructor(
     public id: string,
     public content: string,
     public owner: ProfileSummaryRto,
-    public targetId: string,
-    public onModel: string,
+    public reelId: string,
     public parentCommentId: string | null,
-    public mentionedUsers: MentionedUser[],
+    public mentionedUsers: string[],
     public likes: number,
     public createdAt: string,
     public updatedAt: string,
-    public isLikedByUser?: boolean,
+    public reelCommentCount: number,
+    public isLiked?: boolean,
   ) {}
 
   static fromPostAggregatedData(
-    entity: Comment,
+    entity: CommentRto,
     profile: ProfileSummaryRto,
-    likedByUser?: boolean,
   ): CommentGatewayRto {
+    if (!entity.reelId) {
+      throw new Error(
+        'Comment entity is missing reelId field during RTO mapping',
+      );
+    }
+
     return new CommentGatewayRto(
       entity.id,
       entity.content,
       profile,
-      entity.targetId,
-      entity.onModel,
+      entity.reelId,
       entity.parentCommentId,
       entity.mentionedUsers,
       entity.likes,
-      entity.createdAt.toISOString(),
-      entity.updatedAt.toISOString(),
-      likedByUser,
+      entity.createdAt.toString(),
+      entity.updatedAt.toString(),
+      entity.reelCommentCount,
+      entity.isLiked,
     );
+  }
+
+  static fromPostAggregatedDataArray(
+    entities: CommentRto[],
+    profiles: { [userId: string]: ProfileSummaryRto },
+  ): CommentGatewayRto[] {
+    return entities.map((entity) => {
+      const profile = profiles[entity.ownerId];
+      return CommentGatewayRto.fromPostAggregatedData(entity, profile);
+    });
   }
 }

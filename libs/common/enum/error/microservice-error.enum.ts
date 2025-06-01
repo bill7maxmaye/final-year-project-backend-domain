@@ -9,4 +9,7 @@ export enum MicroserviceErrorCode {
   EMAIL_NOT_VERIFIED = 'email-not-verified',
   POST_NOT_FOUND = 'post-not-found',
   NOT_FOUND = 'not-found',
+  COMMENT_NOT_FOUND = 'comment-not-found',
+  COMMENTS_NOT_FOUND = 'comments-not-found',
+  INVALID_OPERATION = 'invalid-operation',
 }

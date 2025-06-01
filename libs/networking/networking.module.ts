@@ -7,6 +7,7 @@ import {
   CHAT_RMQ_CLIENT,
   NOTIFICATION_RMQ_CLIENT,
   REELS_RMQ_CLIENT,
+  SOCIAL_RMQ_CLIENT,
 } from '../common/constant/microservice-client-tokens.constant';
 
 @Module({
@@ -21,6 +22,7 @@ import {
       MICROSERVICE_QUEUE.NOTIFICATION,
     ),
     RabbitMQModule.register(CHAT_RMQ_CLIENT, MICROSERVICE_QUEUE.CHAT),
+    RabbitMQModule.register(SOCIAL_RMQ_CLIENT, MICROSERVICE_QUEUE.SOCIAL)
   ],
   providers: [NetworkingService],
   exports: [NetworkingService],

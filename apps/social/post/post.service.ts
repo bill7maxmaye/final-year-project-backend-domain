@@ -1,20 +1,26 @@
 import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
+import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
+import { PostReportDto } from '@app/common//dto/gateway/social/post/post-report.dto';
 import { CreatePostDto } from '@app/common//dto/microservices/social/post/create-post.dto';
+import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
+import { PostReportDocument } from '@app/common//models/social/post-report.model';
 import { PostDocument } from '@app/common//models/social/post.model';
+import { FindResult } from '@app/common//rto/find-result';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { FilterQuery } from 'mongoose';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly postRepository: PostRepository) {}
+  constructor(
+    private readonly postRepository: PostRepository,
+    private readonly postReportRepository: PostReportRepository,
+  ) {}
 
-  async createPost(
-    createPostDto: CreatePostDto,
-    authorId?: string,
-  ): Promise<PostDocument> {
+  async createPost(createPostDto: CreatePostDto): Promise<PostDocument> {
     const post = await this.postRepository.create({
       ...createPostDto,
-      authorId: authorId,
     });
+    console.log('Post created:', post);
     return post;
   }
 
@@ -23,9 +29,9 @@ export class PostService {
     updatedPostDto: CreatePostDto,
   ): Promise<PostDocument> {
     try {
-      console.log('Post before update:', updatedPostDto);
+      console.log('Post before update:', updatedPostDto, id);
       const post = await this.postRepository.updateOneAndRetrieve(
-        { _id: id, isDeleted: false },
+        { _id: id },
         updatedPostDto,
       );
 
@@ -57,21 +63,190 @@ export class PostService {
     }
   }
 
-  // Hard delete alternative (uncomment if needed)
-  /*
-    async hardDeletePost(id: string): Promise<{ success: boolean }> {
-      try {
-        const result = await this.postRepository.deleteOne({ _id: id });
-        if (result.deletedCount === 0) {
-          throw new NotFoundException(`Post with ID ${id} not found`);
-        }
-        return { success: true };
-      } catch (error) {
-        if (error instanceof NotFoundException) {
-          throw error;
-        }
-        throw new NotFoundException(`Post with ID ${id} not found`);
+  async toggleReaction(postId: string, userId: string): Promise<PostDocument> {
+    try {
+      const post = await this.postRepository.findOne({ _id: postId });
+
+      if (!post) {
+        throw new NotFoundException(`Post with ID ${postId} not found`);
       }
+      const likedByStrings = post.likedBy.map((id) => id.toString());
+      const isLiked = likedByStrings.includes(userId);
+      console.log('Post liked by:', post.likedBy, isLiked, userId);
+      const updateQuery = isLiked
+        ? { $pull: { likedBy: userId } } // remove if already liked
+        : { $addToSet: { likedBy: userId } }; // add only if not already there
+
+      await this.postRepository.updateOne({ _id: postId }, updateQuery);
+
+      // Return the updated post (optional: you can refetch it or return original)
+      return await this.postRepository.findOne({ _id: postId });
+    } catch (error) {
+      console.error('Error toggling like/unlike:', error);
+      throw new NotFoundException(
+        `Post with ID ${postId} failed to update reaction`,
+      );
     }
-    */
+  }
+
+  async findByContentId(contentId: string): Promise<PostReportDocument[]> {
+    const response = await this.postReportRepository
+      .find({ content_id: contentId })
+      .exec();
+
+    return response;
+  }
+
+  async getById(id: string): Promise<PostDocument> {
+    return this.postRepository.findOne({ _id: id });
+  }
+
+  async listAllPosts(query: ListAllDto): Promise<FindResult<PostDocument>> {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 300;
+    const skip = (page - 1) * limit;
+
+    const filter: FilterQuery<PostDocument> = {};
+
+    if (query.search && query.search.trim()) {
+      const searchTerm = query.search.trim();
+      filter.content = { $regex: new RegExp(searchTerm, 'i') };
+    }
+
+    const [data, total] = await Promise.all([
+      this.postRepository.findMany(filter, {
+        skip,
+        limit,
+        sort: { createdAt: -1 },
+      }),
+      this.postRepository.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    const nextPage = page < totalPages ? page + 1 : null;
+    const prevPage = page > 1 ? page - 1 : null;
+
+    const baseUrl = '/posts'; // or inject base URL if needed
+    const next = nextPage
+      ? `${baseUrl}?page=${nextPage}&limit=${limit}`
+      : undefined;
+    const previous = prevPage
+      ? `${baseUrl}?page=${prevPage}&limit=${limit}`
+      : undefined;
+
+    return FindResult.fromListAll(data, total, next, previous);
+  }
+
+  async resolveReport(
+    reportId: string,
+    resolvedBy: string,
+  ): Promise<{ success: boolean }> {
+    try {
+      console.log('Resolving report with ID:', reportId);
+      const report = await this.postReportRepository.findOneAndUpdate(
+        { _id: reportId },
+        {
+          status: 'RESOLVED',
+          resolvedBy,
+          resolvedAt: new Date(),
+        },
+      );
+      console.log('Report found:', report);
+      if (!report) {
+        console.log('Report not found>>>>>');
+        throw new NotFoundException(`Report with ID ${reportId} not found`);
+      }
+      console.log('Report resolved:', report);
+      return { success: true };
+    } catch (error) {
+      console.error('Error resolving report:', error);
+      return { success: false };
+    }
+  }
+
+  async reportPost(report: PostReportDto): Promise<{ success: boolean }> {
+    try {
+      console.log('Reporting post:', report);
+
+      const post = await this.postRepository.findOne({
+        _id: report.content_id,
+      });
+
+      console.log('Post found:', post);
+
+      if (!post) {
+        console.log('Post not found>>>>>');
+        throw new NotFoundException(
+          `Post with ID ${report.content_id} not found`,
+        );
+      }
+
+      console.log('Post found>>>:', post);
+
+      await this.postReportRepository.create(report);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error reporting post:', error);
+      throw new NotFoundException(
+        `Post with ID ${report.content_id} not found`,
+      );
+    }
+  }
+
+  async searchPostsByContent(
+    query: ListAllDto,
+  ): Promise<FindResult<PostDocument>> {
+    console.log('Search query received in service:', query);
+    const { search, limit = 50, page = 1 } = query;
+    const skip = (page - 1) * limit;
+
+    // Create the search filter with proper typing
+    const filter: FilterQuery<PostDocument> = {};
+
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+      console.log('Search term:', searchTerm);
+      // Use regex search on content field
+      filter.content = { $regex: new RegExp(searchTerm, 'i') };
+      console.log('Search filter:', JSON.stringify(filter));
+    } else {
+      console.log('No search term provided');
+    }
+
+    try {
+      const [data, total] = await Promise.all([
+        this.postRepository.findMany(filter, {
+          skip,
+          limit,
+          sort: { createdAt: -1 },
+        }),
+        this.postRepository.countDocuments(filter),
+      ]);
+
+      console.log('Search results:', {
+        total,
+        found: data.length,
+        firstResult: data[0]?.content?.substring(0, 100),
+      });
+
+      const totalPages = Math.ceil(total / limit);
+      const nextPage = page < totalPages ? page + 1 : null;
+      const prevPage = page > 1 ? page - 1 : null;
+
+      const baseUrl = '/posts';
+      const next = nextPage
+        ? `${baseUrl}?page=${nextPage}&limit=${limit}`
+        : undefined;
+      const previous = prevPage
+        ? `${baseUrl}?page=${prevPage}&limit=${limit}`
+        : undefined;
+
+      return FindResult.fromListAll(data, total, next, previous);
+    } catch (error) {
+      console.error('Error in searchPostsByContent:', error);
+      throw error;
+    }
+  }
 }

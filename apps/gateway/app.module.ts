@@ -21,15 +21,20 @@ import { NotificationsController } from './controllers/notification/notification
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
-import { AuthenticationModule } from 'apps/authentication/authentication.module';
 import { SocketGateway } from './websocket/socket.gateway';
 import { ChatModule } from 'apps/chat/chat.module';
 import { ChatController } from './controllers/chat/chat/chat.controller';
 import { ChatService } from './controllers/chat/chat/chat.service';
+import { CommentController as PostCommentController } from './controllers/social/comment/comment.controller';
+import { CommentService } from './controllers/social/comment/comment.service';
+import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
+import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
+// import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
   imports: [
-    AuthenticationModule,
+    // AuthenticationModule,
+    UserRepositoryModule,
     ConfigModule.forRoot({
       load: [rabbitmqConfig, socketConfig, s3StorageConfig, databaseConfig],
       isGlobal: true,
@@ -57,6 +62,8 @@ import { ChatService } from './controllers/chat/chat/chat.service';
     ReelController,
     NotificationsController,
     ChatController,
+    PostCommentController,
+    ReelCommentController,
   ],
   providers: [
     AppService,
@@ -65,6 +72,7 @@ import { ChatService } from './controllers/chat/chat/chat.service';
     ChatService,
     ReelService,
     s3Provider,
+    CommentService,
     JwtStrategy,
     SocketGateway,
   ],

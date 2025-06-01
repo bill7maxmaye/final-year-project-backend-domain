@@ -7,7 +7,6 @@ import {
   IsEnum,
 } from 'class-validator';
 import { ReelPrivacy } from '../../../enum/reel/reel-visibility.enum';
-import { MentionedUser } from '@app/common//entities/reel/mentioned-user.entity';
 
 export class UpdateReelGatewayDto {
   @IsOptional()
@@ -29,7 +28,7 @@ export class UpdateReelGatewayDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  mentionedUsers?: MentionedUser[];
+  mentionedUsers?: string[];
 
   @IsOptional()
   @IsEnum(ReelPrivacy)

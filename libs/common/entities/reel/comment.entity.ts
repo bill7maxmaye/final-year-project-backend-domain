@@ -1,6 +1,5 @@
 import { CommentDocument } from '../../models/reel/comment.model';
 import { BaseEntity } from '../base.entity';
-import { MentionedUser } from './mentioned-user.entity';
 
 export class Comment extends BaseEntity {
   constructor(
@@ -9,26 +8,28 @@ export class Comment extends BaseEntity {
     updatedAt: Date,
     public content: string,
     public ownerId: string,
-    public targetId: string,
-    public onModel: string,
+    public reelId: string,
     public parentCommentId: string | null,
-    public mentionedUsers: MentionedUser[],
+    public mentionedUserIds: string[],
     public likes: number,
   ) {
     super(id, createdAt, updatedAt);
   }
 
   static fromDocument(document: CommentDocument): Comment {
+    if (!document.reelId) {
+      throw new Error('Comment document is missing reelId field');
+    }
+
     return new Comment(
-      document.id,
+      document._id.toString(),
       document.createdAt,
       document.updatedAt,
       document.content,
       document.ownerId.toString(),
-      document.targetId.toString(),
-      document.onModel,
+      document.reelId.toString(),
       document.parentCommentId ? document.parentCommentId.toString() : null,
-      MentionedUser.fromDocuments(document.mentionedUsers),
+      document.mentionedUserIds,
       document.likes,
     );
   }

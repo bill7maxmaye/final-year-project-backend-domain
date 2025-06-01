@@ -1,21 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { UserRto } from '../../microservices/auth/user.rto';
+
 export class ProfileSummaryRto {
   constructor(
     public id: string,
     public online?: boolean,
     public picture?: string,
     public name?: string,
-    public username?: string,
   ) {}
 
-  static fromProfileRto(user: any): ProfileSummaryRto {
+  static fromProfileRto(
+    user: UserRto,
+    online: boolean = false,
+  ): ProfileSummaryRto {
     return new ProfileSummaryRto(
       user.id,
-      user.online,
+      online,
       user.picture,
-      user.fullName,
-      user.username,
+      user.firstName + user.lastName,
     );
   }
 }
