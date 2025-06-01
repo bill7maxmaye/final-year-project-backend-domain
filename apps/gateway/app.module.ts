@@ -15,12 +15,19 @@ import s3StorageConfig from '@app/common//config/s3-storage.config';
 import { ReelController } from './controllers/reel/reel.controller';
 import { ReelService } from './controllers/reel/reel.service';
 import databaseConfig from '@app/common//config/database.config';
-import { CommentController as PostCommentController } from './controllers/social/comment/comment.controller';
-import { CommentService } from './controllers/social/comment/comment.service';
-import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
+import { SocketModule } from './websocket/socket.module';
+// import { NotificationsModule } from 'apps/notificationnn/notification.module';
+import { NotificationsController } from './controllers/notification/notification.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
+import { SocketGateway } from './websocket/socket.gateway';
+import { ChatModule } from 'apps/chat/chat.module';
+import { ChatController } from './controllers/chat/chat/chat.controller';
+import { ChatService } from './controllers/chat/chat/chat.service';
+import { CommentController as PostCommentController } from './controllers/social/comment/comment.controller';
+import { CommentService } from './controllers/social/comment/comment.service';
+import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
 import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
 // import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
@@ -34,6 +41,9 @@ import { UserRepositoryModule } from '@app/common//baseRepository/userRepository
     }),
     NetworkingModule,
     StorageModule,
+    ChatModule,
+    SocketModule,
+    // NotificationsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -50,6 +60,8 @@ import { UserRepositoryModule } from '@app/common//baseRepository/userRepository
     // SocialController,
     PostController,
     ReelController,
+    NotificationsController,
+    ChatController,
     PostCommentController,
     ReelCommentController,
   ],
@@ -57,10 +69,12 @@ import { UserRepositoryModule } from '@app/common//baseRepository/userRepository
     AppService,
     SocialService,
     PostService,
+    ChatService,
     ReelService,
     s3Provider,
     CommentService,
     JwtStrategy,
+    SocketGateway,
   ],
 })
 export class AppModule {}

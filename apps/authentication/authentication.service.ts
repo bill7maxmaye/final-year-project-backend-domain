@@ -175,7 +175,8 @@ export class AuthenticationService {
       const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '10h' });
 
       return new LoginResponse(accessToken, user._id.toString());
-    } catch {
+    } catch(error) {
+      console.error('Error in loginUser:', error);
       throw new MicroserviceException(
         ErrorMessage.INTERNAL_SERVER_ERROR,
         HttpStatus.INTERNAL_SERVER_ERROR,

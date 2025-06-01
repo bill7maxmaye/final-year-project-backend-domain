@@ -4,6 +4,7 @@ import {
   UpdateQuery,
   MongooseUpdateQueryOptions,
   Query,
+  PipelineStage,
   QueryOptions,
 } from 'mongoose';
 import { Logger, NotFoundException } from '@nestjs/common';
@@ -126,6 +127,58 @@ export abstract class BaseRepository<TDocument extends BaseDocument> {
     }
 
     return updated as TDocument;
+  }
+
+  async updateMany(
+    filter: FilterQuery<TDocument>,
+    updates: UpdateQuery<TDocument>,
+    options: MongooseUpdateQueryOptions<TDocument> = {},
+  ): Promise<number> {
+    const result = await this.model.updateMany(filter, updates, options).exec();
+
+    if (result.modifiedCount === 0) {
+      this.logger.warn(
+        `No documents were updated with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
+    return result.modifiedCount;
+  }
+
+  async aggregateWithPipeline<T = any>(
+    match: FilterQuery<TDocument>,
+    pipeline: PipelineStage[],
+  ): Promise<T[]> {
+    const fullPipeline = [{ $match: match }, ...pipeline];
+
+    const result = await this.model.aggregate(fullPipeline).exec();
+    return result as T[];
+  }
+
+  async createMany(documents: Partial<TDocument>[]): Promise<TDocument[]> {
+    const createdDocuments = await this.model.insertMany(documents, {
+      ordered: true,
+    });
+    return createdDocuments.map((doc) => doc.toJSON() as TDocument);
+  }
+
+  async createAndPopulate(
+    document: Partial<TDocument>,
+    populateOptions: Parameters<typeof this.model.findById>[0][] | string[],
+  ): Promise<TDocument> {
+    const created = await this.model.create(document);
+    const populated = await this.model
+      .findById(created._id)
+      .populate(populateOptions)
+      .exec();
+
+    if (!populated) {
+      throw new Error(
+        `Failed to populate newly created document with ID ${created._id}`,
+      );
+    }
+
+    return populated as TDocument;
   }
 
   async countDocuments(

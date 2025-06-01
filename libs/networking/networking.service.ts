@@ -2,7 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   AUTHENTICATION_RMQ_CLIENT,
+  NOTIFICATION_RMQ_CLIENT,
   REELS_RMQ_CLIENT,
+  CHAT_RMQ_CLIENT,
   SOCIAL_RMQ_CLIENT,
 } from 'libs/common/constant/microservice-client-tokens.constant';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
@@ -16,13 +18,18 @@ export class NetworkingService {
   constructor(
     @Inject(AUTHENTICATION_RMQ_CLIENT) private readonly authClient: ClientProxy,
     @Inject(REELS_RMQ_CLIENT) private readonly reelsClient: ClientProxy,
+    @Inject(CHAT_RMQ_CLIENT) private readonly chatClient: ClientProxy,
+    @Inject(NOTIFICATION_RMQ_CLIENT)
+    private readonly notificationClient: ClientProxy,
     @Inject(SOCIAL_RMQ_CLIENT) private readonly socialClient: ClientProxy,
     // Add other clients here
   ) {
     this.clients = new Map<MICROSERVICE, ClientProxy>([
       [MICROSERVICE.AUTHENTICATION, this.authClient],
       [MICROSERVICE.REELS, this.reelsClient],
-      [MICROSERVICE.SOCIAL, this.socialClient], // Assuming SOCIAL uses the same client as AUTHENTICATION
+      [MICROSERVICE.NOTIFICATION, this.notificationClient],
+      [MICROSERVICE.CHAT, this.chatClient],
+      [MICROSERVICE.SOCIAL, this.socialClient],
       // Add other mappings
     ]);
   }

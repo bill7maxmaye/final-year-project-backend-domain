@@ -128,6 +128,20 @@ export enum ACTION {
   UNLIKE = 'unlike',
   TOGGLE = 'toggle',
   GET_USER = 'get-user',
+
+  CREATED = 'created',
+  UPDATED = 'updated',
+  DELETED = 'deleted',
+  LISTED = 'listed',
+  RETRIEVED = 'retrieved',
+  GETTED = 'getted',
+  RECEIVED = 'received',
+  SENT = 'sent',
+
+  // 11. Chat
+
+  GET_CHAT_LIST = 'get-chat-list',
+  CREATE_MANY = 'create-many',
   CHECK_USERNAME_AVAILABILITY = 'check-username-availability',
   UPDATE_USERNAME = 'update-username',
   GET_USER_BY_ID = 'get-user-by-id',
