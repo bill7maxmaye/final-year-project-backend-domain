@@ -10,4 +10,5 @@ export enum MICROSERVICE {
   MESSAGING = 'messaging',
   MONETIZATION = 'monetization',
   CHAT = 'chat',
+  GATEWAY = 'gateway',
 }

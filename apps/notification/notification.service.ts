@@ -24,7 +24,7 @@ export class NotificationService {
     }
 
     this.networkingService.emit(
-      `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATED}`,
+      `${MICROSERVICE.GATEWAY}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATED}`,
       notification,
     );
 

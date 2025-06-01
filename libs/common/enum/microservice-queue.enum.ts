@@ -10,5 +10,7 @@ export enum MICROSERVICE_QUEUE {
   MESSAGING = 'messaging_queue',
   MONETIZATION = 'monetization_queue',
 
+  GATEWAY = 'gateway_queue',
+
   CHAT = 'chat_queue',
 }

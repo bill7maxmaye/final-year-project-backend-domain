@@ -5,6 +5,7 @@ import { MICROSERVICE_QUEUE } from 'libs/common/enum/microservice-queue.enum';
 import {
   AUTHENTICATION_RMQ_CLIENT,
   CHAT_RMQ_CLIENT,
+  GATEWAY_RMQ_CLIENT,
   NOTIFICATION_RMQ_CLIENT,
   REELS_RMQ_CLIENT,
   SOCIAL_RMQ_CLIENT,
@@ -22,7 +23,8 @@ import {
       MICROSERVICE_QUEUE.NOTIFICATION,
     ),
     RabbitMQModule.register(CHAT_RMQ_CLIENT, MICROSERVICE_QUEUE.CHAT),
-    RabbitMQModule.register(SOCIAL_RMQ_CLIENT, MICROSERVICE_QUEUE.SOCIAL)
+    RabbitMQModule.register(SOCIAL_RMQ_CLIENT, MICROSERVICE_QUEUE.SOCIAL),
+    RabbitMQModule.register(GATEWAY_RMQ_CLIENT, MICROSERVICE_QUEUE.GATEWAY),
   ],
   providers: [NetworkingService],
   exports: [NetworkingService],

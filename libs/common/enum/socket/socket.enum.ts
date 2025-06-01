@@ -4,4 +4,5 @@ export enum SOCKET_EVENTS {
   TYPING = 'typing',
   STOP_TYPING = 'stop_typing',
   RECENT_CHAT_UPDATE = 'recent_chat_update',
+  NEW_NOTIFICATION = 'new_notification',
 }

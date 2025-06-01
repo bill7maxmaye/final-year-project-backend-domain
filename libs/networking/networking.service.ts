@@ -6,6 +6,7 @@ import {
   REELS_RMQ_CLIENT,
   CHAT_RMQ_CLIENT,
   SOCIAL_RMQ_CLIENT,
+  GATEWAY_RMQ_CLIENT,
 } from 'libs/common/constant/microservice-client-tokens.constant';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
 import { lastValueFrom } from 'rxjs';
@@ -22,6 +23,7 @@ export class NetworkingService {
     @Inject(NOTIFICATION_RMQ_CLIENT)
     private readonly notificationClient: ClientProxy,
     @Inject(SOCIAL_RMQ_CLIENT) private readonly socialClient: ClientProxy,
+    @Inject(GATEWAY_RMQ_CLIENT) private readonly gatewayClient: ClientProxy,
     // Add other clients here
   ) {
     this.clients = new Map<MICROSERVICE, ClientProxy>([
@@ -30,6 +32,7 @@ export class NetworkingService {
       [MICROSERVICE.NOTIFICATION, this.notificationClient],
       [MICROSERVICE.CHAT, this.chatClient],
       [MICROSERVICE.SOCIAL, this.socialClient],
+      [MICROSERVICE.GATEWAY, this.gatewayClient],
       // Add other mappings
     ]);
   }
