@@ -122,8 +122,11 @@ export class PostService {
 
   async listAllPosts(query: ListAllDto): Promise<FindResult<PostDocument>> {
     const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 300;
+    const limit = Number(query.limit) || 20;
     const skip = (page - 1) * limit;
+
+    console.log('Pagination params:', { page, limit, skip });
+    console.log('Query:', query);
 
     const filter: FilterQuery<PostDocument> = {};
 
@@ -132,27 +135,51 @@ export class PostService {
       filter.content = { $regex: new RegExp(searchTerm, 'i') };
     }
 
+    if (query.authorId) {
+      filter.authorId = query.authorId;
+    }
+
+    console.log('Filter:', filter);
+
     const [data, total] = await Promise.all([
       this.postRepository.findMany(filter, {
         skip,
         limit,
-        sort: { createdAt: -1 },
+        sort: {
+          [query.sortBy || 'createdAt']: query.sortDirection === 'asc' ? 1 : -1,
+        },
       }),
       this.postRepository.countDocuments(filter),
     ]);
+
+    console.log('Query results:', {
+      total,
+      returned: data.length,
+      page,
+      limit,
+      skip,
+    });
 
     const totalPages = Math.ceil(total / limit);
 
     const nextPage = page < totalPages ? page + 1 : null;
     const prevPage = page > 1 ? page - 1 : null;
 
-    const baseUrl = '/posts'; // or inject base URL if needed
-    const next = nextPage
-      ? `${baseUrl}?page=${nextPage}&limit=${limit}`
-      : undefined;
-    const previous = prevPage
-      ? `${baseUrl}?page=${prevPage}&limit=${limit}`
-      : undefined;
+    // Build query parameters for pagination links
+    const buildQueryParams = (pageNum: number) => {
+      const params = new URLSearchParams();
+      params.append('page', pageNum.toString());
+      params.append('limit', limit.toString());
+      if (query.search) params.append('search', query.search);
+      if (query.authorId) params.append('authorId', query.authorId);
+      if (query.sortBy) params.append('sortBy', query.sortBy);
+      if (query.sortDirection)
+        params.append('sortDirection', query.sortDirection);
+      return params.toString();
+    };
+
+    const next = nextPage ? `?${buildQueryParams(nextPage)}` : undefined;
+    const previous = prevPage ? `?${buildQueryParams(prevPage)}` : undefined;
 
     return FindResult.fromListAll(data, total, next, previous);
   }
@@ -232,20 +259,17 @@ export class PostService {
     query: ListAllDto,
   ): Promise<FindResult<PostDocument>> {
     console.log('Search query received in service:', query);
-    const { search, limit = 50, page = 1 } = query;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    // Create the search filter with proper typing
     const filter: FilterQuery<PostDocument> = {};
 
-    if (search && search.trim()) {
-      const searchTerm = search.trim();
+    if (query.search && query.search.trim()) {
+      const searchTerm = query.search.trim();
       console.log('Search term:', searchTerm);
-      // Use regex search on content field
       filter.content = { $regex: new RegExp(searchTerm, 'i') };
       console.log('Search filter:', JSON.stringify(filter));
-    } else {
-      console.log('No search term provided');
     }
 
     try {
@@ -253,7 +277,10 @@ export class PostService {
         this.postRepository.findMany(filter, {
           skip,
           limit,
-          sort: { createdAt: -1 },
+          sort: {
+            [query.sortBy || 'createdAt']:
+              query.sortDirection === 'asc' ? 1 : -1,
+          },
         }),
         this.postRepository.countDocuments(filter),
       ]);
@@ -268,13 +295,25 @@ export class PostService {
       const nextPage = page < totalPages ? page + 1 : null;
       const prevPage = page > 1 ? page - 1 : null;
 
-      const baseUrl = '/posts';
-      const next = nextPage
-        ? `${baseUrl}?page=${nextPage}&limit=${limit}`
-        : undefined;
-      const previous = prevPage
-        ? `${baseUrl}?page=${prevPage}&limit=${limit}`
-        : undefined;
+      // Build query parameters for pagination links
+      const buildQueryParams = (pageNum: number) => {
+        const params = new URLSearchParams();
+        params.append('page', pageNum.toString());
+        params.append('limit', limit.toString());
+        if (query.search) {
+          params.append('search', query.search);
+        }
+        if (query.sortBy) {
+          params.append('sortBy', query.sortBy);
+        }
+        if (query.sortDirection) {
+          params.append('sortDirection', query.sortDirection);
+        }
+        return params.toString();
+      };
+
+      const next = nextPage ? `?${buildQueryParams(nextPage)}` : undefined;
+      const previous = prevPage ? `?${buildQueryParams(prevPage)}` : undefined;
 
       return FindResult.fromListAll(data, total, next, previous);
     } catch (error) {
@@ -288,7 +327,7 @@ export class PostService {
     userId: string,
   ): Promise<FindResult<PostDocument>> {
     const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 300;
+    const limit = Number(query.limit) || 20;
     const skip = (page - 1) * limit;
 
     const filter: FilterQuery<PostDocument> = {
@@ -299,11 +338,34 @@ export class PostService {
       this.postRepository.findMany(filter, {
         skip,
         limit,
-        sort: { createdAt: -1 },
+        sort: {
+          [query.sortBy || 'createdAt']: query.sortDirection === 'asc' ? 1 : -1,
+        },
       }),
       this.postRepository.countDocuments(filter),
     ]);
 
-    return FindResult.fromListAll(data, total);
+    const totalPages = Math.ceil(total / limit);
+    const nextPage = page < totalPages ? page + 1 : null;
+    const prevPage = page > 1 ? page - 1 : null;
+
+    // Build query parameters for pagination links
+    const buildQueryParams = (pageNum: number) => {
+      const params = new URLSearchParams();
+      params.append('page', pageNum.toString());
+      params.append('limit', limit.toString());
+      if (query.sortBy) {
+        params.append('sortBy', query.sortBy);
+      }
+      if (query.sortDirection) {
+        params.append('sortDirection', query.sortDirection);
+      }
+      return params.toString();
+    };
+
+    const next = nextPage ? `?${buildQueryParams(nextPage)}` : undefined;
+    const previous = prevPage ? `?${buildQueryParams(prevPage)}` : undefined;
+
+    return FindResult.fromListAll(data, total, next, previous);
   }
 }

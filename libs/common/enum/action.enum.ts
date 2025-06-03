@@ -128,6 +128,7 @@ export enum ACTION {
   UNLIKE = 'unlike',
   TOGGLE = 'toggle',
   GET_USER = 'get-user',
+  GET_USER_POSTS = 'get-user-posts',
 
   CREATED = 'created',
   UPDATED = 'updated',
