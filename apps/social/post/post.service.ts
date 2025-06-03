@@ -1,19 +1,25 @@
 import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
 import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
 import { PostReportDto } from '@app/common//dto/gateway/social/post/post-report.dto';
+import { CreateNotificationDto } from '@app/common//dto/microservices/notification/create-notification-dto';
 import { CreatePostDto } from '@app/common//dto/microservices/social/post/create-post.dto';
 import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
+import { ACTION } from '@app/common//enum/action.enum';
+import { CONTROLLER } from '@app/common//enum/controller.enum';
+import { MICROSERVICE } from '@app/common//enum/microservice.enum';
 import { PostReportDocument } from '@app/common//models/social/post-report.model';
 import { PostDocument } from '@app/common//models/social/post.model';
 import { FindResult } from '@app/common//rto/find-result';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FilterQuery } from 'mongoose';
+import { NetworkingService } from '@pp/networking';
+import { FilterQuery, Types } from 'mongoose';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postReportRepository: PostReportRepository,
+    private readonly networkingService: NetworkingService,
   ) {}
 
   async createPost(createPostDto: CreatePostDto): Promise<PostDocument> {
@@ -78,6 +84,19 @@ export class PostService {
         : { $addToSet: { likedBy: userId } }; // add only if not already there
 
       await this.postRepository.updateOne({ _id: postId }, updateQuery);
+
+      if (!isLiked) {
+        const createNotificationDto = CreateNotificationDto.fromLikePost(
+          new Types.ObjectId(post.authorId), // Assuming post.userId is the owner of the post
+          post._id,
+          new Types.ObjectId(userId),
+        );
+
+        this.networkingService.emit(
+          `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
+          createNotificationDto,
+        );
+      }
 
       // Return the updated post (optional: you can refetch it or return original)
       return await this.postRepository.findOne({ _id: postId });
