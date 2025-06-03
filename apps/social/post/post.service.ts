@@ -176,6 +176,13 @@ export class PostService {
         console.log('Report not found>>>>>');
         throw new NotFoundException(`Report with ID ${reportId} not found`);
       }
+
+      // Decrement the report count for the post
+      // await this.postRepository.updateOne(
+      //   { _id: report.content_id },
+      //   { $inc: { reportCount: -1 } },
+      // );
+
       console.log('Report resolved:', report);
       return { success: true };
     } catch (error) {
@@ -203,7 +210,14 @@ export class PostService {
 
       console.log('Post found>>>:', post);
 
+      // Create the report
       await this.postReportRepository.create(report);
+
+      // Increment the report count
+      await this.postRepository.updateOne(
+        { _id: report.content_id },
+        { $inc: { reportCount: 1 } },
+      );
 
       return { success: true };
     } catch (error) {
@@ -267,5 +281,29 @@ export class PostService {
       console.error('Error in searchPostsByContent:', error);
       throw error;
     }
+  }
+
+  async getPostsByUserId(
+    query: ListAllDto,
+    userId: string,
+  ): Promise<FindResult<PostDocument>> {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 300;
+    const skip = (page - 1) * limit;
+
+    const filter: FilterQuery<PostDocument> = {
+      authorId: userId,
+    };
+
+    const [data, total] = await Promise.all([
+      this.postRepository.findMany(filter, {
+        skip,
+        limit,
+        sort: { createdAt: -1 },
+      }),
+      this.postRepository.countDocuments(filter),
+    ]);
+
+    return FindResult.fromListAll(data, total);
   }
 }
