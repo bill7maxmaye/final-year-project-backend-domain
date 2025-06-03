@@ -24,6 +24,9 @@ export class PostDocument extends BaseDocument {
 
   @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
   mentions?: string[];
+
+  @Prop({ type: Number, default: 0 })
+  reportCount: number;
 }
 
 export const PostSchema = SchemaFactory.createForClass(PostDocument);
