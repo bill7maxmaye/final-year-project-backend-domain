@@ -197,7 +197,7 @@ export class PostController {
   }
 
   @MessagePattern(
-    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIST_ALL}`,
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.GET_USER_POSTS}`,
   )
   async getPostsByUser(
     @Payload() payload: ListAllDto & { authorId?: string },
@@ -205,7 +205,7 @@ export class PostController {
     try {
       const { authorId, ...query } = payload;
       this.logger.log(`Getting posts for user ${authorId}`);
-      
+
       if (authorId) {
         const result = await this.service.getPostsByUserId(query, authorId);
         return new FindResult<PostRto>(

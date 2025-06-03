@@ -152,9 +152,7 @@ export class PostController {
       // First fetch all posts
       const response = await this.networking.send<FindResult<PostRto>>(
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIST_ALL}`,
-        {
-          payload: query,
-        },
+        query,
       );
 
       // Get unique author IDs from all posts
@@ -194,6 +192,8 @@ export class PostController {
       return {
         data: posts,
         total: response.total,
+        next: response.next,
+        previous: response.previous,
       };
     } catch (error) {
       this.logger.error('Error listing posts', error.stack);
@@ -283,7 +283,7 @@ export class PostController {
     this.logger.log(`Getting posts for user ${user.id}`);
     try {
       const response = await this.networking.send<FindResult<PostRto>>(
-        `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIST_ALL}`,
+        `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.GET_USER_POSTS}`,
         {
           ...query,
           authorId: user.id,
@@ -326,6 +326,8 @@ export class PostController {
       return {
         data: posts,
         total: response.total,
+        next: response.next,
+        previous: response.previous,
       };
     } catch (error) {
       this.logger.error('Error getting user posts', error.stack);
