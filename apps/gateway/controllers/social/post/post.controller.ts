@@ -150,9 +150,7 @@ export class PostController {
       // First fetch all posts
       const response = await this.networking.send<FindResult<PostRto>>(
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.LIST_ALL}`,
-        {
-          payload: query,
-        },
+        query,
       );
 
       // Get unique author IDs from all posts
@@ -192,6 +190,8 @@ export class PostController {
       return {
         data: posts,
         total: response.total,
+        next: response.next,
+        previous: response.previous,
       };
     } catch (error) {
       this.logger.error('Error listing posts', error.stack);
@@ -273,6 +273,66 @@ export class PostController {
       };
     } catch (error) {
       this.logger.error('Error searching posts', error.stack);
+      throw error;
+    }
+  }
+
+  @Get('posts/user')
+  async getPostsByUser(
+    @ActiveUser() user: User,
+    @Query() query: ListAllDto,
+  ): Promise<FindResult<PostGatewayRto>> {
+    this.logger.log(`Getting posts for user ${user.id}`);
+    try {
+      const response = await this.networking.send<FindResult<PostRto>>(
+        `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.GET_USER_POSTS}`,
+        {
+          ...query,
+          authorId: user.id,
+        },
+      );
+
+      // Get unique author IDs from all posts
+      const authorIds = [
+        ...new Set(response.data.map((post) => post.authorId)),
+      ];
+
+      // Fetch all owners in a single batch request
+      const owners = await Promise.all(
+        authorIds.map((authorId) =>
+          this.networking.send<UserRto>(
+            `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
+            authorId,
+          ),
+        ),
+      );
+
+      // Create a map of authorId -> owner for quick lookup
+      const ownerMap = new Map<string, UserRto>();
+      owners.forEach((owner, index) => {
+        ownerMap.set(authorIds[index], owner);
+      });
+
+      // Map posts with their respective owners
+      const posts = response.data.map((post) => {
+        const owner = ownerMap.get(post.authorId);
+        if (!owner) {
+          this.logger.warn(
+            `Owner not found for post ${post.id} with author ${post.authorId}`,
+          );
+          throw new Error(`Owner not found for post ${post.id}`);
+        }
+        return PostGatewayRto.fromEntity(post, owner);
+      });
+
+      return {
+        data: posts,
+        total: response.total,
+        next: response.next,
+        previous: response.previous,
+      };
+    } catch (error) {
+      this.logger.error('Error getting user posts', error.stack);
       throw error;
     }
   }

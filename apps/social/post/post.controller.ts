@@ -195,4 +195,40 @@ export class PostController {
       throw error;
     }
   }
+
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.GET_USER_POSTS}`,
+  )
+  async getPostsByUser(
+    @Payload() payload: ListAllDto & { authorId?: string },
+  ): Promise<FindResult<PostRto>> {
+    try {
+      const { authorId, ...query } = payload;
+      this.logger.log(`Getting posts for user ${authorId}`);
+
+      if (authorId) {
+        const result = await this.service.getPostsByUserId(query, authorId);
+        return new FindResult<PostRto>(
+          result.data.map((item) => PostRto.fromEntity(item)),
+          result.total,
+          result.next,
+          result.previous,
+        );
+      } else {
+        const result = await this.service.listAllPosts(query);
+        return new FindResult<PostRto>(
+          result.data.map((item) => PostRto.fromEntity(item)),
+          result.total,
+          result.next,
+          result.previous,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error getting posts for user ${payload.authorId}:`,
+        error,
+      );
+      throw error;
+    }
+  }
 }
