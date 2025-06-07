@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
@@ -61,7 +60,7 @@ export class PostController {
   ): Promise<PostGatewayRto> {
     const uploadResult =
       files && (await this.storageService.uploadMultipleFiles(files));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
     const post = CreatePostDto.fromCreate(body, uploadResult, user.id);
     console.log('post', post);
 
@@ -95,7 +94,6 @@ export class PostController {
       files && (await this.storageService.uploadMultipleFiles(files));
     // const userId = uuidv4();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const post = CreatePostDto.fromUpdate(body, uploadResult, user.id);
     const response = await this.networking.send<PostRto>(
       `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.UPDATE}`,
@@ -218,8 +216,10 @@ export class PostController {
         ...query,
         search: query.search.trim(),
       };
-      
-      this.logger.log(`Sending search query to service: ${JSON.stringify(searchQuery)}`);
+
+      this.logger.log(
+        `Sending search query to service: ${JSON.stringify(searchQuery)}`,
+      );
 
       // First search posts based on content
       const response = await this.networking.send<FindResult<PostRto>>(

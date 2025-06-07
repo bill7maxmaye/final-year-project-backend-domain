@@ -151,10 +151,9 @@ export class CommentService {
 
     if (!response) {
       throw MicroserviceException.fromException(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         ErrorMessage.COMMENT_NOT_FOUND,
         HttpStatus.NOT_FOUND,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
         MicroserviceErrorCode.COMMENT_NOT_FOUND,
       );
     }

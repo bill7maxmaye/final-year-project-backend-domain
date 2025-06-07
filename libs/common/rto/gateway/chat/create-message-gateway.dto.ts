@@ -1,4 +1,3 @@
-
 import { IsMongoId, IsOptional, IsString, IsArray } from 'class-validator';
 
 export class CreateMessageGatewayDto {

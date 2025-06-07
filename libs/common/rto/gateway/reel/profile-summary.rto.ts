@@ -6,6 +6,7 @@ export class ProfileSummaryRto {
     public online?: boolean,
     public picture?: string,
     public name?: string,
+    public walletId?: string,
   ) {}
 
   static fromProfileRto(
@@ -17,6 +18,7 @@ export class ProfileSummaryRto {
       online,
       user.picture,
       user.firstName + user.lastName,
+      user.walletId,
     );
   }
 }

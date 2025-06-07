@@ -4,7 +4,6 @@ import { Model } from 'mongoose';
 import { BaseRepository } from '../../base-repository';
 import { PostCommentDocument } from '@app/common//models/social/comment.model';
 
-
 @Injectable()
 export class PostCommentRepository extends BaseRepository<PostCommentDocument> {
   constructor(

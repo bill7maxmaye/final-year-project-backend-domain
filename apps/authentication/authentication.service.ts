@@ -18,7 +18,6 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { EmailService } from './email.service';
-import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 
 @Injectable()
 export class AuthenticationService {
@@ -175,7 +174,7 @@ export class AuthenticationService {
       const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '10h' });
 
       return new LoginResponse(accessToken, user._id.toString());
-    } catch(error) {
+    } catch (error) {
       console.error('Error in loginUser:', error);
       throw new MicroserviceException(
         ErrorMessage.INTERNAL_SERVER_ERROR,
@@ -555,14 +554,13 @@ export class AuthenticationService {
           MicroserviceErrorCode.USER_NOT_FOUND,
         );
       }
-      
 
       // Verify current password
       const isCurrentPasswordValid = await bcrypt.compare(
         changePasswordDto.currentPassword,
         user.password,
       );
-      
+
       if (!isCurrentPasswordValid) {
         throw MicroserviceException.fromException(
           'Current password is incorrect',
@@ -576,7 +574,7 @@ export class AuthenticationService {
         changePasswordDto.newPassword,
         user.password,
       );
-      
+
       if (isSamePassword) {
         throw MicroserviceException.fromException(
           'New password must be different from current password',
@@ -586,7 +584,10 @@ export class AuthenticationService {
       }
 
       // Hash and update the new password
-      const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+      const hashedNewPassword = await bcrypt.hash(
+        changePasswordDto.newPassword,
+        10,
+      );
       await this.userRepository.findOneAndUpdate(
         { _id: user._id },
         { password: hashedNewPassword },
@@ -605,14 +606,18 @@ export class AuthenticationService {
     }
   }
 
-
-  async updateUsername(userId: string, updateUsernameDto: UpdateProfileDto): Promise<UserDocument> {
+  async updateUsername(
+    userId: string,
+    updateUsernameDto: UpdateProfileDto,
+  ): Promise<UserDocument> {
     // Check if username is taken
-    const existingUser = await this.userRepository.findOne({
-      username: updateUsernameDto.username,
-      _id: { $ne: userId },
-    }).catch(() => null);
-  
+    const existingUser = await this.userRepository
+      .findOne({
+        username: updateUsernameDto.username,
+        _id: { $ne: userId },
+      })
+      .catch(() => null);
+
     if (existingUser) {
       throw MicroserviceException.fromException(
         'Username already taken',
@@ -620,13 +625,13 @@ export class AuthenticationService {
         MicroserviceErrorCode.INVALID_OPERATION,
       );
     }
-  
+
     // Update username
     const updatedUser = await this.userRepository.findOneAndUpdate(
       { _id: userId },
       { username: updateUsernameDto.username },
     );
-  
+
     return updatedUser;
   }
 

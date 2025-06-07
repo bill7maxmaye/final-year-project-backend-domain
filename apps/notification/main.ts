@@ -19,6 +19,8 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
   await app.listen(process.env.port ?? 3009);
-  console.log('🚀 Notification Microservice is running on http://localhost:3003');
+  console.log(
+    '🚀 Notification Microservice is running on http://localhost:3003',
+  );
 }
 bootstrap();
