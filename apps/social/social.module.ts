@@ -22,6 +22,7 @@ import {
   PostReportDocument,
   ReportSchema,
 } from '@app/common//models/social/post-report.model';
+import { NetworkingModule, NetworkingService } from '@pp/networking';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import {
       }),
       inject: [ConfigService],
     }),
+    NetworkingModule,
   ],
   controllers: [SocialController, PostController, CommentController],
   providers: [
