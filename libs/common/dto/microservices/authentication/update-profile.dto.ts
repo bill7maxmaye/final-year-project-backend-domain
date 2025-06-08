@@ -14,6 +14,9 @@ export class UpdateProfileDto {
   username?: string;
 
   @IsOptional()
+  preferences?: string[];
+
+  @IsOptional()
   @IsString()
   bio?: string;
 
