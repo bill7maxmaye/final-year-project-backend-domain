@@ -47,7 +47,7 @@ export class PostController {
 
   @Patch('posts/:id')
   @UseInterceptors(FilesInterceptor('files'))
-  async update(
+  update(
     @Param('id') id: string,
     @Body() body: UpdatePostGatewayDto,
     @UploadedFiles() files?: Express.Multer.File[],
