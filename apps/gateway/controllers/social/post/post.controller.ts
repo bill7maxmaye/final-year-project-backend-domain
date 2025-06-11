@@ -85,7 +85,7 @@ export class PostController {
 
   @Patch('posts/:id')
   @UseInterceptors(FilesInterceptor('files'))
-   update(
+  async update(
     @Param('id') id: string,
     @Body() body: UpdatePostGatewayDto,
     @ActiveUser() user: User,
