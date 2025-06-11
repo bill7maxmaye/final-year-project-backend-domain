@@ -46,6 +46,24 @@
         "tsConfigPath": "libs/networking/tsconfig.lib.json"
       }
     },
+    "notification": {
+      "type": "application",
+      "root": "apps/notification",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification/tsconfig.app.json"
+      }
+    },
+    "chat": {
+      "type": "application",
+      "root": "apps/chat",
+      "entryFile": "main",
+      "sourceRoot": "apps/chat",
+      "compilerOptions": {
+        "tsConfigPath": "apps/chat/tsconfig.app.json"
+      }
+    },
     "rabbitmq": {
       "type": "library",
       "root": "libs/rabbitmq",
@@ -53,6 +71,15 @@
       "sourceRoot": "libs/rabbitmq",
       "compilerOptions": {
         "tsConfigPath": "libs/rabbitmq/tsconfig.lib.json"
+      }
+    },
+    "reel": {
+      "type": "application",
+      "root": "apps/reel",
+      "entryFile": "main",
+      "sourceRoot": "apps/reel",
+      "compilerOptions": {
+        "tsConfigPath": "apps/reel/tsconfig.app.json"
       }
     },
     "social": {

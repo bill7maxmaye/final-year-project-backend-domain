@@ -1,13 +1,30 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { rabbitmqConfig } from '../common/config/rabbitmq.config';
 import { NetworkingService } from './networking.service';
+import { RabbitMQModule } from 'libs/rabbitmq';
+import { MICROSERVICE_QUEUE } from 'libs/common/enum/microservice-queue.enum';
+import {
+  AUTHENTICATION_RMQ_CLIENT,
+  CHAT_RMQ_CLIENT,
+  GATEWAY_RMQ_CLIENT,
+  NOTIFICATION_RMQ_CLIENT,
+  REELS_RMQ_CLIENT,
+  SOCIAL_RMQ_CLIENT,
+} from '../common/constant/microservice-client-tokens.constant';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: [rabbitmqConfig],
-    }),
+    RabbitMQModule.register(
+      AUTHENTICATION_RMQ_CLIENT,
+      MICROSERVICE_QUEUE.AUTHENTICATION,
+    ),
+    RabbitMQModule.register(REELS_RMQ_CLIENT, MICROSERVICE_QUEUE.REELS),
+    RabbitMQModule.register(
+      NOTIFICATION_RMQ_CLIENT,
+      MICROSERVICE_QUEUE.NOTIFICATION,
+    ),
+    RabbitMQModule.register(CHAT_RMQ_CLIENT, MICROSERVICE_QUEUE.CHAT),
+    RabbitMQModule.register(SOCIAL_RMQ_CLIENT, MICROSERVICE_QUEUE.SOCIAL),
+    RabbitMQModule.register(GATEWAY_RMQ_CLIENT, MICROSERVICE_QUEUE.GATEWAY),
   ],
   providers: [NetworkingService],
   exports: [NetworkingService],

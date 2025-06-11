@@ -1,71 +1,71 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import {
-  ClientProxy,
-  ClientProxyFactory,
-  Transport,
-} from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
+  AUTHENTICATION_RMQ_CLIENT,
+  NOTIFICATION_RMQ_CLIENT,
+  REELS_RMQ_CLIENT,
+  CHAT_RMQ_CLIENT,
+  SOCIAL_RMQ_CLIENT,
+  GATEWAY_RMQ_CLIENT,
+} from 'libs/common/constant/microservice-client-tokens.constant';
+import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
 import { lastValueFrom } from 'rxjs';
-import { MICROSERVICE_QUEUE } from '../common/enum/microservice-queue.enum';
-import { RabbitMQConfig } from '../common/config/interfaces/rabbitmq-config.interface';
-import { CONFIG_TOKEN } from '../common/config/constant/config-token.constant';
 
 @Injectable()
-export class NetworkingService implements OnModuleInit {
-  private readonly logger = new Logger(NetworkingService.name);
-  private clients: Map<MICROSERVICE_QUEUE, ClientProxy> = new Map();
+export class NetworkingService {
+  protected readonly logger = new Logger(NetworkingService.name);
+  private readonly clients: Map<MICROSERVICE, ClientProxy>;
 
-  constructor(private readonly configService: ConfigService) {}
-
-  onModuleInit() {
-    // Initialize all clients at startup
-    Object.values(MICROSERVICE_QUEUE).forEach((queue) => {
-      this.createClient(queue);
-    });
+  constructor(
+    @Inject(AUTHENTICATION_RMQ_CLIENT) private readonly authClient: ClientProxy,
+    @Inject(REELS_RMQ_CLIENT) private readonly reelsClient: ClientProxy,
+    @Inject(CHAT_RMQ_CLIENT) private readonly chatClient: ClientProxy,
+    @Inject(NOTIFICATION_RMQ_CLIENT)
+    private readonly notificationClient: ClientProxy,
+    @Inject(SOCIAL_RMQ_CLIENT) private readonly socialClient: ClientProxy,
+    @Inject(GATEWAY_RMQ_CLIENT) private readonly gatewayClient: ClientProxy,
+    // Add other clients here
+  ) {
+    this.clients = new Map<MICROSERVICE, ClientProxy>([
+      [MICROSERVICE.AUTHENTICATION, this.authClient],
+      [MICROSERVICE.REELS, this.reelsClient],
+      [MICROSERVICE.NOTIFICATION, this.notificationClient],
+      [MICROSERVICE.CHAT, this.chatClient],
+      [MICROSERVICE.SOCIAL, this.socialClient],
+      [MICROSERVICE.GATEWAY, this.gatewayClient],
+      // Add other mappings
+    ]);
   }
 
-  private createClient(queue: MICROSERVICE_QUEUE) {
-    const rmqConfig = this.configService.get<RabbitMQConfig>(
-      CONFIG_TOKEN.RABBITMQ,
-    );
-    if (!rmqConfig?.url) {
-      throw new Error('RabbitMQ URL is not configured');
-    }
-
-    const client = ClientProxyFactory.create({
-      transport: Transport.RMQ,
-      options: {
-        urls: [rmqConfig.url],
-        queue,
-        queueOptions: { durable: false },
-      },
-    });
-
-    this.clients.set(queue, client);
-    this.logger.log(`Initialized client for queue: ${queue}`);
-  }
-
-  async send<T>(
-    queue: MICROSERVICE_QUEUE,
-    pattern: string,
-    data: any,
-  ): Promise<T> {
-    const client = this.clients.get(queue);
+  // Helper to get the correct client based on the microservice enum
+  private getClient(microservice: MICROSERVICE): ClientProxy {
+    console.log('Getting client for microservice:', microservice);
+    const client = this.clients.get(microservice);
     if (!client) {
-      throw new Error(`No client configured for queue: ${queue}`);
+      throw new Error(`Client not found for microservice: ${microservice}`);
     }
-
-    this.logger.debug(`Sending to ${queue} with pattern: ${pattern}`);
-    return lastValueFrom(client.send<T>(pattern, data));
+    return client;
   }
 
-  emit(queue: MICROSERVICE_QUEUE, pattern: string, data: any): void {
-    const client = this.clients.get(queue);
-    if (!client) {
-      throw new Error(`No client configured for queue: ${queue}`);
-    }
+  // You might need to modify send/emit to include the target microservice
+  // Or parse the pattern to determine the target
+  async send<T>(pattern: string, data: any): Promise<T> {
+    this.logger.debug(`Sending pattern: ${pattern}`);
 
-    this.logger.debug(`Emitting to ${queue} with pattern: ${pattern}`);
-    client.emit(pattern, data);
+    // Assuming your pattern always starts with the MICROSERVICE enum value
+    const microserviceName = pattern.split('.')[0] as MICROSERVICE;
+    const client = this.getClient(microserviceName); // Get the correct client
+
+    return lastValueFrom(client.send<T>(pattern, data)); // Use the correct client
+  }
+
+  emit(eventName: string, data: any): void {
+    this.logger.debug(`Emitting event: ${eventName}`);
+
+    // Assuming your eventName always starts with the MICROSERVICE enum value
+    const microserviceName = eventName.split('.')[0] as MICROSERVICE;
+    const client = this.getClient(microserviceName); // Get the correct client
+
+    client.emit(eventName, data); // Use the correct client
   }
 }

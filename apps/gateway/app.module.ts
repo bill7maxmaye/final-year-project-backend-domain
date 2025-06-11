@@ -1,33 +1,80 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { RabbitMQModule } from 'libs/rabbitmq';
 import { AuthenticationController } from './controllers/authentication/auth.controller';
 import { NetworkingModule } from 'libs/networking';
-import { MICROSERVICE_QUEUE } from 'libs/common/enum/microservice-queue.enum';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { rabbitmqConfig } from 'libs/common/config/rabbitmq.config';
-import { SocialController } from './controllers/social/social.controller';
 import { SocialService } from './controllers/social/social.service';
 import { PostController } from './controllers/social/post/post.controller';
 import { PostService } from './controllers/social/post/post.service';
 import socketConfig from '@app/common//config/socket.config';
+import { s3Provider } from './storage/storage.provider';
+import { StorageModule } from './storage/storage.module';
+import s3StorageConfig from '@app/common//config/s3-storage.config';
+import { ReelController } from './controllers/reel/reel.controller';
+import { ReelService } from './controllers/reel/reel.service';
+import databaseConfig from '@app/common//config/database.config';
+import { SocketModule } from './websocket/socket.module';
+// import { NotificationsModule } from 'apps/notificationnn/notification.module';
+import { NotificationsController } from './controllers/notification/notification.controller';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from '@app/common//strategies/jwt.strategy';
+import { SocketGateway } from './websocket/socket.gateway';
+import { ChatModule } from 'apps/chat/chat.module';
+import { ChatController } from './controllers/chat/chat/chat.controller';
+import { ChatService } from './controllers/chat/chat/chat.service';
+import { CommentController as PostCommentController } from './controllers/social/comment/comment.controller';
+import { CommentService } from './controllers/social/comment/comment.service';
+import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
+import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
+// import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
   imports: [
+    // AuthenticationModule,
+    UserRepositoryModule,
     ConfigModule.forRoot({
-      load: [rabbitmqConfig, socketConfig],
+      load: [rabbitmqConfig, socketConfig, s3StorageConfig, databaseConfig],
+      isGlobal: true,
     }),
-    RabbitMQModule.register(MICROSERVICE_QUEUE.AUTHENTICATION),
-    RabbitMQModule.register(MICROSERVICE_QUEUE.SOCIAL),
     NetworkingModule,
+    StorageModule,
+    ChatModule,
+    SocketModule,
+    // NotificationsModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
+    }),
   ],
   controllers: [
     AppController,
     AuthenticationController,
-    SocialController,
+    // SocialController,
     PostController,
+    ReelController,
+    NotificationsController,
+    ChatController,
+    PostCommentController,
+    ReelCommentController,
   ],
-  providers: [AppService, SocialService, PostService],
+  providers: [
+    AppService,
+    SocialService,
+    PostService,
+    ChatService,
+    ReelService,
+    s3Provider,
+    CommentService,
+    JwtStrategy,
+    SocketGateway,
+  ],
 })
 export class AppModule {}

@@ -1,0 +1,12 @@
+export enum NotificationType {
+  COMMENT = 'comment',
+  LIKE = 'like',
+  FOLLOW = 'follow',
+  MENTION = 'mention',
+  REACTION = 'reaction',
+  SHARE = 'share',
+  POST = 'post',
+  MESSAGE = 'message',
+  FRIEND_REQUEST = 'friend_request',
+  FRIEND_REQUEST_ACCEPTED = 'friend_request_accepted',
+}

@@ -2,6 +2,8 @@ export enum ACTION {
   // 1. User Authentication and Profiles
   REGISTER = 'register',
   LOGIN = 'login',
+  VERIFY_EMAIL = 'verify-email',
+  RESEND_VERIFICATION_EMAIL = 'resend-verification-email',
   LOGOUT = 'logout',
   UPDATE_EMAIL = 'update-email',
   CONFIRM_EMAIL = 'confirm-email',
@@ -18,11 +20,22 @@ export enum ACTION {
   REMOVE_SECONDARY_EMAIL = 'remove-secondary-email',
   RETRIEVE_PROFILE_VIEW_MAP = 'retrieve-profile-view-map',
   UPDATE_PREFERENCES = 'update-preferences',
+  GET_ALL = 'get-all',
+  GET_BY_ID = 'get-by-id',
+  REPORT = 'report',
+  UPDATE_PROFILE = 'update-profile',
+  FOLLOW_USER = 'follow-user',
+  UNFOLLOW_USER = 'unfollow-user',
+  GET_FOLLOWERS = 'get-followers',
+  GET_FOLLOWING = 'get-following',
+  CHECK_FOLLOW_STATUS = 'check-follow-status',
 
   // 2. Social Posts
   CREATE_POST = 'create-post',
   UPDATE_POST = 'update-post',
   DELETE_POST = 'delete-post',
+  GET_MANY = 'get-many',
+  GET = 'get',
   RETRIEVE_POST = 'retrieve-post',
   LIKE_POST = 'like-post',
   UNLIKE_POST = 'unlike-post',
@@ -41,12 +54,16 @@ export enum ACTION {
   UPDATE_REEL = 'update-reel',
   DELETE_REEL = 'delete-reel',
   RETRIEVE_REEL = 'retrieve-reel',
+  FAVORITE_REEL = 'favorite-reel',
   LIKE_REEL = 'like-reel',
   UNLIKE_REEL = 'unlike-reel',
   COMMENT_REEL = 'comment-reel',
   SHARE_REEL = 'share-reel',
+  GET_COMMENTS_BY_REELID = 'get-comments-by-reelid',
   RETRIEVE_REEL_ANALYTICS = 'retrieve-reel-analytics',
   LIST_TRENDING_REELS = 'list-trending-reels',
+  GET_REPORTS_BY_ENTITY = 'get-reports-by-entity',
+  GET_CREATED_AFTER = 'get-created-after',
 
   // 4. Gifting System
   SEND_GIFT = 'send-gift',
@@ -72,6 +89,8 @@ export enum ACTION {
   EXPLORE = 'explore',
   RECOMMENDATIONS = 'recommendations',
   LOCATIONS = 'locations',
+  GET_REPORTS = 'get-reports',
+  RESOLVE_REPORT = 'resolve-report',
 
   // 8. Messaging
   SEND_MESSAGE = 'send-message',
@@ -101,7 +120,32 @@ export enum ACTION {
   // Generic Actions (Can be used across multiple controllers)
   CREATE = 'create',
   RETRIEVE = 'retrieve',
+  RETRIEVE_ALL = 'retrieve-all',
   UPDATE = 'update',
   DELETE = 'delete',
   LIST_ALL = 'list-all',
+  LIKE = 'like',
+  UNLIKE = 'unlike',
+  TOGGLE = 'toggle',
+  GET_USER = 'get-user',
+  GET_USER_POSTS = 'get-user-posts',
+
+  CREATED = 'created',
+  UPDATED = 'updated',
+  DELETED = 'deleted',
+  LISTED = 'listed',
+  RETRIEVED = 'retrieved',
+  GETTED = 'getted',
+  RECEIVED = 'received',
+  SENT = 'sent',
+
+  // 11. Chat
+
+  GET_CHAT_LIST = 'get-chat-list',
+  CREATE_MANY = 'create-many',
+  CHECK_USERNAME_AVAILABILITY = 'check-username-availability',
+  UPDATE_USERNAME = 'update-username',
+  GET_USER_BY_ID = 'get-user-by-id',
+  GET_ALL_USERS = 'get-all-users',
+  SEARCH_USERS = 'search-users',
 }
