@@ -29,6 +29,13 @@ import { CommentController as PostCommentController } from './controllers/social
 import { CommentService } from './controllers/social/comment/comment.service';
 import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
 import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
+import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
+import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
+import { MongooseModule } from '@nestjs/mongoose';
+import { PostDocument, PostSchema } from '@app/common//models/social/post.model';
+import { PostCommentDocument, PostCommentSchema } from '@app/common//models/social/comment.model';
+import { ReelDocument, ReelSchema } from '@app/common//models/reel/reel.model';
+import { ReelsRepository } from 'apps/reel/reel/reel.repository';
 // import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
@@ -39,6 +46,11 @@ import { UserRepositoryModule } from '@app/common//baseRepository/userRepository
       load: [rabbitmqConfig, socketConfig, s3StorageConfig, databaseConfig],
       isGlobal: true,
     }),
+    MongooseModule.forFeature([
+      { name: PostDocument.name, schema: PostSchema },
+      { name: PostCommentDocument.name, schema: PostCommentSchema },
+      { name: ReelDocument.name, schema: ReelSchema },
+    ]),
     NetworkingModule,
     StorageModule,
     ChatModule,
@@ -75,6 +87,9 @@ import { UserRepositoryModule } from '@app/common//baseRepository/userRepository
     CommentService,
     JwtStrategy,
     SocketGateway,
+    PostRepository,
+    ReelsRepository,
+    PostCommentRepository,
   ],
 })
 export class AppModule {}
