@@ -36,6 +36,10 @@ import { PostDocument, PostSchema } from '@app/common//models/social/post.model'
 import { PostCommentDocument, PostCommentSchema } from '@app/common//models/social/comment.model';
 import { ReelDocument, ReelSchema } from '@app/common//models/reel/reel.model';
 import { ReelsRepository } from 'apps/reel/reel/reel.repository';
+import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
+import { ReportsRepository } from 'apps/reel/report/report.repository';
+import { PostReportDocument, ReportSchema as PostReportSchema } from '@app/common//models/social/post-report.model';
+import { ReportDocument, ReportSchema as ReelReportSchema } from '@app/common//models/reel/report.model';
 // import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
@@ -50,6 +54,8 @@ import { ReelsRepository } from 'apps/reel/reel/reel.repository';
       { name: PostDocument.name, schema: PostSchema },
       { name: PostCommentDocument.name, schema: PostCommentSchema },
       { name: ReelDocument.name, schema: ReelSchema },
+      { name: PostReportDocument.name, schema: PostReportSchema },
+      { name: ReportDocument.name, schema: ReelReportSchema },
     ]),
     NetworkingModule,
     StorageModule,
@@ -90,6 +96,8 @@ import { ReelsRepository } from 'apps/reel/reel/reel.repository';
     PostRepository,
     ReelsRepository,
     PostCommentRepository,
+    PostReportRepository,
+    ReportsRepository,
   ],
 })
 export class AppModule {}
