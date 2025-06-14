@@ -275,8 +275,9 @@ export class PostController {
     }
   }
 
-  @Get('posts/user')
+  @Get('posts/user/:id')
   async getPostsByUser(
+    @Param('id') id: string,
     @ActiveUser() user: User,
     @Query() query: ListAllDto,
   ): Promise<FindResult<PostGatewayRto>> {
@@ -286,7 +287,7 @@ export class PostController {
         `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.GET_USER_POSTS}`,
         {
           ...query,
-          authorId: user.id,
+          authorId: id,
         },
       );
 
