@@ -237,4 +237,14 @@ export class AuthenticationController {
       };
     });
   }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.DELETE_USER}`,
+  )
+  async deleteUser(
+    @Payload() data: { userId: string },
+  ): Promise<{ success: boolean }> {
+    const result = await this.authenticationService.deleteUser(data.userId);
+    return { success: result };
+  }
 }

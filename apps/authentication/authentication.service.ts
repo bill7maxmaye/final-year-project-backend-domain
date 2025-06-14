@@ -18,7 +18,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { EmailService } from './email.service';
-import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
+import { StorageService } from 'apps/gateway/storage/storage.service';
 
 @Injectable()
 export class AuthenticationService {
@@ -26,6 +26,7 @@ export class AuthenticationService {
     private readonly configService: ConfigService,
     private readonly userRepository: UserRepository,
     private readonly emailService: EmailService,
+    private readonly storageService: StorageService,
   ) {}
 
   private generateVerificationCode(): string {
@@ -647,5 +648,44 @@ export class AuthenticationService {
         { username: { $regex: query, $options: 'i' } },
       ],
     });
+  }
+
+  async deleteUser(userId: string): Promise<boolean> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw MicroserviceException.fromException(
+          ErrorMessage.USER_NOT_FOUND,
+          HttpStatus.NOT_FOUND,
+          MicroserviceErrorCode.USER_NOT_FOUND,
+        );
+      }
+
+      // Delete user's profile picture if exists
+      if (user.profilePic) {
+        try {
+          const key = user.profilePic.split('/').pop();
+          if (key) {
+            await this.storageService.deleteFile(`POC/${key}`);
+          }
+        } catch (error) {
+          console.error('Error deleting profile picture:', error);
+          // Continue with user deletion even if profile picture deletion fails
+        }
+      }
+
+      // Delete the user
+      await this.userRepository.deleteOne({ _id: userId });
+      return true;
+    } catch (error) {
+      if (error instanceof MicroserviceException) {
+        throw error;
+      }
+      throw MicroserviceException.fromException(
+        error.message || ErrorMessage.INTERNAL_SERVER_ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
