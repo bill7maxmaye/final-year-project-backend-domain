@@ -8,6 +8,7 @@ export class PostRto {
     public authorId: string,
     public commentIds: string[],
     public likedBy: string[],
+    public reportCount: number = 0,
     public createdAt: Date,
     public updatedAt: Date,
   ) {}
@@ -20,6 +21,7 @@ export class PostRto {
       entity.authorId ?? '',
       entity.commentIds ?? [],
       entity.likedBy ?? [],
+      entity.reportCount ?? 0,
       entity.createdAt,
       entity.updatedAt,
     );
