@@ -849,7 +849,7 @@ paths:
     get:
       tags:
         - Reels
-      summary: Get all reels
+      summary: Get list of reels
       security:
         - bearerAuth: []
       parameters:
@@ -880,6 +880,56 @@ paths:
                       $ref: '#/components/schemas/Reel'
                   total:
                     type: integer
+
+    /search:
+      get:
+        tags:
+          - Reels
+        summary: Search reels by description
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: query
+            name: query
+            required: true
+            schema:
+              type: string
+            description: Search query to match against reel descriptions
+          - in: query
+            name: page
+            schema:
+              type: integer
+              minimum: 1
+              default: 1
+          - in: query
+            name: limit
+            schema:
+              type: integer
+              minimum: 1
+              maximum: 100
+              default: 20
+        responses:
+          '200':
+            description: List of reels matching the search query
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Reel'
+          '400':
+            description: Invalid search query or pagination parameters
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                    error:
+                      type: string
+                    statusCode:
+                      type: integer
 
     post:
       tags:
