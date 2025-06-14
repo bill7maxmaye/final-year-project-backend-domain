@@ -13,6 +13,8 @@ export class UserRto {
     public profilePic?: string,
     public following?: string[],
     public followers?: string[],
+    public gender?: string,
+    public status?: string,
     public createdAt?: Date,
     public updatedAt?: Date,
   ) {}
@@ -30,6 +32,8 @@ export class UserRto {
       entity.profilePic,
       entity.following,
       entity.followers,
+      entity.gender,
+      entity.status,
       entity.createdAt,
       entity.updatedAt,
     );
