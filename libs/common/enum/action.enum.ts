@@ -30,6 +30,7 @@ export enum ACTION {
   GET_FOLLOWING = 'get-following',
   CHECK_FOLLOW_STATUS = 'check-follow-status',
   GET_BY_USER_ID = 'get-bu-user-id',
+  DELETE_USER = 'delete-user',
 
   // 2. Social Posts
   CREATE_POST = 'create-post',

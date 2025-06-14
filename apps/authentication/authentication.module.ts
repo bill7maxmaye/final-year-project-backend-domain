@@ -13,6 +13,9 @@ import {
 } from '@app/common//models/authentication/user.model';
 import { UserRepository } from '@app/common//baseRepository/userRepository/user.repository';
 import { EmailService } from './email.service';
+import { StorageModule } from 'apps/gateway/storage/storage.module';
+import { s3Provider } from 'apps/gateway/storage/storage.provider';
+import s3StorageConfig from '@app/common//config/s3-storage.config';
 
 // import { DatabaseModule } from 'libs/common';
 @Module({
@@ -26,6 +29,7 @@ import { EmailService } from './email.service';
   // ],
   imports: [
     ConfigModule.forRoot({
+      load: [s3StorageConfig],
       isGlobal: true,
     }),
     MongooseModule.forFeature([
@@ -38,9 +42,10 @@ import { EmailService } from './email.service';
       }),
       inject: [ConfigService],
     }),
+    StorageModule,
   ],
   controllers: [AuthenticationController],
-  providers: [AuthenticationService, UserRepository, EmailService],
+  providers: [AuthenticationService, UserRepository, EmailService, s3Provider],
   exports: [AuthenticationService, UserRepository, EmailService],
 })
 export class AuthenticationModule {}
