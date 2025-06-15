@@ -140,6 +140,7 @@ export class AuthenticationService {
     const user = await this.userRepository
       .findOne({ email: loginUserDto.email })
       .catch(() => null);
+    console.log('user ------------------', user);
     if (!user) {
       throw MicroserviceException.fromException(
         ErrorMessage.USER_NOT_FOUND,

@@ -29,7 +29,18 @@ import { ReelService } from '../reel.service';
 import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
 import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 import { DeleteCommentResponseRto } from '@app/common//rto/microservices/reel/delete-comment-response.rto';
+import { HttpService } from '@nestjs/axios';
+import { catchError, firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 
+export class PredictionDto {
+  label: string;
+  score: number;
+}
+export class ModerationResponseDto {
+  predictions: PredictionDto[];
+}
 @Controller('reel-comment')
 @UseGuards(JwtAuthGuard)
 export class CommentController {
@@ -38,17 +49,16 @@ export class CommentController {
   constructor(
     private readonly networking: NetworkingService,
     private readonly reelService: ReelService,
+    private readonly httpService: HttpService,
   ) {}
 
   @Post()
   async create(
-    @ActiveUser() user: User, // This is the authenticated user parameter
+    @ActiveUser() user: User,
     @Body() createCommentDto: CreateCommentGatewayDto,
   ): Promise<CommentGatewayRto> {
-    // this.logger.log(`Received request to create comment ${createCommentDto}`);
-
     try {
-      const userId = user.id; // Use the ID from the authenticated user parameter
+      const userId = user.id;
       const comment = CreateCommentDto.fromGatewayRequest(
         userId,
         createCommentDto,
@@ -61,26 +71,86 @@ export class CommentController {
         comment,
       );
 
-      // --- FIX START ---
-      // Rename this variable to avoid conflict with the 'user' parameter
       const authorDetails = await this.networking.send<UserRto>(
         `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.GET_USER}`,
-        response.ownerId, // Assuming response.ownerId holds the ID needed
+        response.ownerId,
       );
 
-      // Use the new variable name in the populate call
+      void this.moderateComment(response.id, createCommentDto.content);
       return this.reelService.populate(authorDetails, response);
-      // --- FIX END ---
     } catch (error) {
       this.logger.error('Error during create:', error);
-      // It's generally better to throw a specific HttpException here
-      // to provide meaningful status codes to the client.
-      // Example:
-      // if (error instanceof HttpException) {
-      //   throw error;
-      // }
-      // throw new HttpException('Failed to create comment', HttpStatus.INTERNAL_SERVER_ERROR);
-      throw error; // Re-throw the original error if you prefer
+
+      throw error;
+    }
+  }
+
+  private async moderateComment(
+    commentId: string,
+    content: string,
+  ): Promise<void> {
+    try {
+      console.log('Am here');
+      const moderationResult = await firstValueFrom(
+        this.httpService
+          .post('http://localhost:8001/predict', { post: content })
+          .pipe(
+            catchError((error: AxiosError) => {
+              this.logger.error(
+                `Error during moderation: ${error.message}`,
+                error.stack,
+              );
+              return [];
+            }),
+          ),
+      );
+
+      console.log(JSON.stringify(moderationResult.data));
+
+      if (!moderationResult || !moderationResult.data) {
+        this.logger.warn(
+          `No moderation predictions received for comment ${commentId}. Skipping moderation actions.`,
+        );
+        return; // Exit if there are problems with the response.
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const prediction: PredictionDto = moderationResult.data.predictions[0];
+
+      if (prediction.label === 'free') {
+        const moderationDto = ModerationDto.fromGateway(
+          prediction.label,
+          prediction.score,
+        );
+
+        await this.networking.send(
+          `${MICROSERVICE.REELS}.${CONTROLLER.REEL_COMMENTS}.${ACTION.COMMENT_MODERATION_RESULT}`,
+          { commentId: commentId, moderation: moderationDto },
+        );
+      } else if (prediction.label === 'hate' && prediction.score >= 0.8) {
+        try {
+          await this.networking.send<DeleteCommentResponseRto>(
+            `${MICROSERVICE.REELS}.${CONTROLLER.REEL_COMMENTS}.${ACTION.DELETE}`,
+            { id: commentId },
+          );
+          this.logger.log(`Deleted comment ${commentId} due to hate speech.`);
+        } catch (err) {
+          this.logger.error(
+            `Error deleting comment ${commentId} after moderation: ${err}`,
+            err,
+          );
+        }
+      } else {
+        // Handle other cases (e.g., neutral, or hate with score < 0.8).  You may want to log these.
+        this.logger.log(
+          `Comment moderation result is ${prediction.label} with score ${prediction.score}. No action taken.`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error during comment moderation for comment ${commentId}:`,
+        error,
+      );
     }
   }
 

@@ -29,6 +29,7 @@ import { CommentController as PostCommentController } from './controllers/social
 import { CommentService } from './controllers/social/comment/comment.service';
 import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
 import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
+import { HttpModule } from '@nestjs/axios';
 // import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
@@ -40,6 +41,7 @@ import { UserRepositoryModule } from '@app/common//baseRepository/userRepository
       isGlobal: true,
     }),
     NetworkingModule,
+    HttpModule,
     StorageModule,
     ChatModule,
     SocketModule,

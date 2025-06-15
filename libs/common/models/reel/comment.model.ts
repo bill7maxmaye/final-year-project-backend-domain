@@ -21,6 +21,12 @@ export class CommentDocument extends BaseDocument {
 
   @Prop({ type: Number, default: 0 })
   likes: number;
+
+  @Prop({ type: String, default: 'free' })
+  lable: string;
+
+  @Prop({ type: Number, default: 100 })
+  score: number;
 }
 
 const CommentSchema = SchemaFactory.createForClass(CommentDocument);

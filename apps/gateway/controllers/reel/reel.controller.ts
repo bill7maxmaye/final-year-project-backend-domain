@@ -45,6 +45,21 @@ import { ReelGatewayRto } from '@app/common//rto/gateway/reel/reel-gateway.rto';
 import { SuccessRto } from '@app/common//rto/success.rto';
 import { LikeResponseRTO } from '@app/common//rto/microservices/reel/like-response.rto';
 import { ShareReelResponseRto } from '@app/common//rto/microservices/reel/Share-reel-response.rto';
+import { HttpService } from '@nestjs/axios';
+import { catchError, firstValueFrom } from 'rxjs';
+import { RecommendedReelGatewayDto } from '@app/common//dto/gateway/reel/recommended-reel.gateway.dto';
+import { RecommendedReelDto } from '@app/common//dto/microservices/reel/recommended-reel.dto';
+import { AxiosError } from 'axios';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
+import { ReelAnalyticsDto } from '@app/common//dto/microservices/reel/reel-analytics.dto';
+
+export class PredictionDto {
+  label: string;
+  score: number;
+}
+export class ModerationResponseDto {
+  predictions: PredictionDto[];
+}
 @Controller('reel')
 @UseGuards(JwtAuthGuard)
 export class ReelController {
@@ -54,6 +69,7 @@ export class ReelController {
     private readonly reelService: ReelService,
     private readonly storageService: StorageService,
     private readonly networking: NetworkingService,
+    private readonly httpService: HttpService,
   ) {}
 
   @Post()
@@ -98,6 +114,8 @@ export class ReelController {
         reel,
       );
 
+      void this.analyzeVideoAndSendUpdate(response.id, file);
+
       return {
         message: 'Reel Created successfully',
         fileInfo: {
@@ -138,6 +156,127 @@ export class ReelController {
 
     console.log('reel ', reel);
     return reel;
+  }
+
+  private async moderateTranscription(
+    reelId: string,
+    transcription: string,
+  ): Promise<void> {
+    try {
+      const moderationResult = await firstValueFrom(
+        this.httpService
+          .post<ModerationResponseDto>('http://localhost:8001/predict', {
+            post: transcription,
+          })
+          .pipe(
+            catchError((error: AxiosError) => {
+              this.logger.error(
+                `Error during moderation: ${error.message}`,
+                error.stack,
+              );
+              return [];
+            }),
+          ),
+      );
+
+      console.log(moderationResult?.data?.predictions);
+
+      if (moderationResult?.data?.predictions?.[0]) {
+        const prediction: PredictionDto = moderationResult.data.predictions[0];
+        if (prediction.label === 'free') {
+          const moderationDto = ModerationDto.fromGateway(
+            prediction.label,
+            prediction.score,
+          );
+
+          await this.networking.send(
+            `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.MODERATION_RESULT}`,
+            { reelId: reelId, moderation: moderationDto },
+          );
+        } else if (prediction.label === 'hate' && prediction.score >= 0.8) {
+          await this.networking.send(
+            `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.DELETE}`,
+            reelId,
+          );
+          this.logger.log(
+            `Deleted reel ${reelId} due to hate speech in transcription.`,
+          );
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Error during reel moderation: ${error}`);
+    }
+  }
+
+  private async analyzeVideoAndSendUpdate(
+    reelId: string,
+    file: Express.Multer.File,
+  ): Promise<void> {
+    try {
+      const formData = new FormData();
+      const contentType = file.mimetype || 'video/mp4';
+
+      // Convert buffer to Blob
+      const blob = new Blob([file.buffer], { type: contentType });
+
+      // Append blob with filename
+      formData.append('video_file', blob, file.originalname);
+
+      const analysisResult = await firstValueFrom(
+        this.httpService
+          .post<UpdateReelGatewayDto>(
+            'http://127.0.0.1:8000/analyze/video_with_transcription',
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            },
+          )
+          .pipe(
+            catchError((error: AxiosError) => {
+              this.logger.error(
+                `Error during video analysis: ${error.message}`,
+                error.stack,
+              );
+              throw error;
+            }),
+          ),
+      );
+
+      if (!analysisResult?.data) {
+        this.logger.warn('No analysis data received. Skipping reel update.');
+        return;
+      }
+
+      const updateReelGatewayDto = analysisResult.data;
+
+      // Moderate the transcribed text if available
+      if (updateReelGatewayDto.transcription_text) {
+        void this.moderateTranscription(
+          reelId,
+          updateReelGatewayDto.transcription_text,
+        );
+      }
+
+      const updateReelDto = UpdateReelDto.fromGatewayRequest(
+        reelId,
+        updateReelGatewayDto,
+      );
+
+      const payload = { id: reelId, updateReelDto };
+
+      await this.networking.send<ReelRto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.UPDATE}`,
+        payload,
+      );
+      this.logger.debug(`Reel ${reelId} updated with analysis data.`);
+    } catch (error) {
+      this.logger.error(
+        `Error updating reel ${reelId} with analysis data:`,
+        error,
+      );
+    }
   }
 
   @Delete(':id')
@@ -417,6 +556,16 @@ export class ReelController {
         createReportGatewayDto,
       );
 
+      // If the reported entity is a reel, increment its report count
+      if (
+        createReportGatewayDto.reportedEntityType === ReportedEntityType.REEL
+      ) {
+        await this.networking.send(
+          `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.INCREMENT_REPORT_COUNT}`,
+          createReportGatewayDto.reportedEntityId,
+        );
+      }
+
       const report = await this.networking.send<ReportRto>(
         `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.CREATE}`,
         createReportDto,
@@ -492,6 +641,128 @@ export class ReelController {
       this.logger.error(`Error deleting report ${id}:`, error);
       throw new HttpException(
         'Failed to delete report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('recommendations')
+  async updateRecommendations(
+    @ActiveUser() user: User,
+    @Body() recommendationsDto: RecommendedReelGatewayDto,
+  ): Promise<RecommendedReelDto> {
+    this.logger.log(
+      `Received request to update recommendations for user ${user.id}`,
+    );
+
+    try {
+      const recommendations = await this.networking.send<RecommendedReelDto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.UPDATE_RECOMMENDATIONS}`,
+        {
+          userId: recommendationsDto.userId,
+          recommendedReels: recommendationsDto.recommendedReels,
+        },
+      );
+
+      return recommendations;
+    } catch (error) {
+      this.logger.error(
+        `Error updating recommendations for user ${user.id}:`,
+        error,
+      );
+      throw new HttpException(
+        'Failed to update recommendations',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('recommendations/score')
+  async getRecommendationsByScore(
+    @ActiveUser() user: User,
+    @Query('minScore') minScore: string,
+    @Query('limit', new ParseIntPipe({ optional: true } as ParseIntPipeOptions))
+    limit?: number,
+  ): Promise<ReelGatewayRto[]> {
+    this.logger.log(
+      `Received request to get recommendations by score for user ${user.id}`,
+    );
+
+    try {
+      const parsedMinScore = parseFloat(minScore);
+      if (isNaN(parsedMinScore)) {
+        throw new BadRequestException('minScore must be a valid number');
+      }
+
+      // First get the recommendations
+      const recommendations = await this.networking.send<RecommendedReelDto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_RECOMMENDATIONS_BY_SCORE}`,
+        {
+          userId: user.id,
+          minScore: parsedMinScore,
+          limit,
+        },
+      );
+
+      if (!recommendations || recommendations.recommendedReels.length === 0) {
+        return [];
+      }
+
+      // Sort recommendations by score in descending order
+      const sortedRecommendations = recommendations.recommendedReels.sort(
+        (a, b) => b.score - a.score,
+      );
+
+      // Get the reel IDs in sorted order
+      const reelIds = sortedRecommendations.map((rec) => rec.reelId);
+
+      // Fetch the actual reels
+      const reels = await this.networking.send<ReelRto[]>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_MANY}`,
+        {
+          paginationOptions: {
+            page: 1,
+            limit: reelIds.length,
+          },
+          userid: user.id,
+          reelIds: reelIds,
+        },
+      );
+
+      // Populate the reels with gateway-specific data
+      return this.reelService.populateReelList(reels);
+    } catch (error) {
+      this.logger.error(
+        `Error getting recommendations by score for user ${user.id}:`,
+        error,
+      );
+      throw new HttpException(
+        'Failed to get recommendations',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('analytics/liked')
+  async getLikedReelsAnalytics(
+    @ActiveUser() user: User,
+  ): Promise<ReelAnalyticsDto> {
+    this.logger.log(`Getting liked reels analytics for user ${user.id}`);
+
+    try {
+      const analytics = await this.networking.send<ReelAnalyticsDto>(
+        `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_LIKED_REELS_ANALYTICS}`,
+        user.id,
+      );
+
+      return analytics;
+    } catch (error) {
+      this.logger.error(
+        `Error getting liked reels analytics for user ${user.id}:`,
+        error,
+      );
+      throw new HttpException(
+        'Failed to get liked reels analytics',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
