@@ -6,6 +6,7 @@ import { CommentsRepository } from './comment.repository';
 import { UpdateCommentDto } from '@app/common//dto/microservices/reel/update-comment.dto';
 import { CommentDocument } from '@app/common//models/reel/comment.model';
 import { LikeResponse } from '@app/common//dto/interface/like.interface';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 
 interface PaginationOptions {
   page: number;
@@ -20,10 +21,10 @@ export class CommentService {
     try {
       const { id, body } = createCommentDto;
 
-      console.log(
-        body.parentCommentId,
-        new Types.ObjectId(body.parentCommentId),
-      );
+      // console.log(
+      //   body.parentCommentId,
+      //   new Types.ObjectId(body.parentCommentId),
+      // );
 
       const comment = await this.commentRepository.create({
         ownerId: id,
@@ -35,7 +36,7 @@ export class CommentService {
         mentionedUserIds: [],
       });
 
-      console.log(comment);
+      // console.log(comment);
 
       return Comment.fromDocument(comment);
     } catch (error) {
@@ -88,6 +89,34 @@ export class CommentService {
       } else {
         throw error;
       }
+    }
+  }
+
+  async moderationResult(
+    id: string,
+    moderationDto: ModerationDto,
+  ): Promise<Comment> {
+    try {
+      const updateObject: UpdateQuery<Comment> = {
+        $set: {
+          label: moderationDto.label,
+          score: moderationDto.score,
+        },
+      };
+
+      console.log('Update Object here:', id, updateObject);
+
+      const updatedReel = await this.commentRepository.updateOneAndRetrieve(
+        { _id: new Types.ObjectId(id) },
+        updateObject,
+      );
+
+      return Comment.fromDocument(updatedReel);
+    } catch (error: any) {
+      if (error) {
+        throw new NotFoundException(`Invalid Reel ID format "${id}"`);
+      }
+      throw error;
     }
   }
 

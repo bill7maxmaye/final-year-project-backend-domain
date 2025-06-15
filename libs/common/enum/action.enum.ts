@@ -66,6 +66,8 @@ export enum ACTION {
   LIST_TRENDING_REELS = 'list-trending-reels',
   GET_REPORTS_BY_ENTITY = 'get-reports-by-entity',
   GET_CREATED_AFTER = 'get-created-after',
+  INCREMENT_REPORT_COUNT = 'increment-report-count',
+  GET_LIKED_REELS_ANALYTICS = 'get-liked-reels-analytics',
 
   // 4. Gifting System
   SEND_GIFT = 'send-gift',
@@ -90,6 +92,8 @@ export enum ACTION {
   SEARCH = 'search',
   EXPLORE = 'explore',
   RECOMMENDATIONS = 'recommendations',
+  UPDATE_RECOMMENDATIONS = 'update-recommendations',
+  GET_RECOMMENDATIONS_BY_SCORE = 'get-recommendations-by-score',
   LOCATIONS = 'locations',
   GET_REPORTS = 'get-reports',
   RESOLVE_REPORT = 'resolve-report',
@@ -150,4 +154,8 @@ export enum ACTION {
   GET_USER_BY_ID = 'get-user-by-id',
   GET_ALL_USERS = 'get-all-users',
   SEARCH_USERS = 'search-users',
+
+  // General
+  MODERATION_RESULT = 'moderation-result',
+  COMMENT_MODERATION_RESULT = 'comment-moderation-result',
 }

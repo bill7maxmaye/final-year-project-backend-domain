@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { MicroserviceErrorCode, MicroserviceException } from '@app/common';
 import { ActiveUser } from '@app/common//decorators/active-user-decorator';
 import { CreatePostCommentGatewayDto } from '@app/common//dto/gateway/social/post/create-comment-gateway.rto';
@@ -207,10 +206,9 @@ export class CommentController {
       );
       if (!response) {
         throw MicroserviceException.fromException(
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           ErrorMessage.COMMENT_NOT_FOUND,
           HttpStatus.NOT_FOUND,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
           MicroserviceErrorCode.COMMENT_NOT_FOUND,
         );
       }

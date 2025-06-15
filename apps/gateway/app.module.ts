@@ -29,17 +29,12 @@ import { CommentController as PostCommentController } from './controllers/social
 import { CommentService } from './controllers/social/comment/comment.service';
 import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
 import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
+import { HttpModule } from '@nestjs/axios';
 import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
-import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
-import { MongooseModule } from '@nestjs/mongoose';
-import { PostDocument, PostSchema } from '@app/common//models/social/post.model';
-import { PostCommentDocument, PostCommentSchema } from '@app/common//models/social/comment.model';
-import { ReelDocument, ReelSchema } from '@app/common//models/reel/reel.model';
 import { ReelsRepository } from 'apps/reel/reel/reel.repository';
+import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
 import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
 import { ReportsRepository } from 'apps/reel/report/report.repository';
-import { PostReportDocument, ReportSchema as PostReportSchema } from '@app/common//models/social/post-report.model';
-import { ReportDocument, ReportSchema as ReelReportSchema } from '@app/common//models/reel/report.model';
 // import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({
@@ -50,14 +45,8 @@ import { ReportDocument, ReportSchema as ReelReportSchema } from '@app/common//m
       load: [rabbitmqConfig, socketConfig, s3StorageConfig, databaseConfig],
       isGlobal: true,
     }),
-    MongooseModule.forFeature([
-      { name: PostDocument.name, schema: PostSchema },
-      { name: PostCommentDocument.name, schema: PostCommentSchema },
-      { name: ReelDocument.name, schema: ReelSchema },
-      { name: PostReportDocument.name, schema: PostReportSchema },
-      { name: ReportDocument.name, schema: ReelReportSchema },
-    ]),
     NetworkingModule,
+    HttpModule,
     StorageModule,
     ChatModule,
     SocketModule,

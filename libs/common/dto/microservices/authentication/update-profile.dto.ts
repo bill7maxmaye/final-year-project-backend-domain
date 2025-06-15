@@ -23,4 +23,8 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   profilePic?: string;
+
+  @IsOptional()
+  @IsString()
+  walletId?: string;
 }

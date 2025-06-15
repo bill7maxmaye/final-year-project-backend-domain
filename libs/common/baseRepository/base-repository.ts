@@ -111,13 +111,11 @@ export abstract class BaseRepository<TDocument extends BaseDocument> {
       filter._id = new Types.ObjectId(filter._id);
     }
 
-    console.log('filter', filter, 'updates', updates, this.model.modelName);
+    // console.log('filter', filter, 'updates', updates, this.model.modelName);
     const updated = await this.model
       .findOneAndUpdate(filter, updates, { new: true, ...options })
       .lean(true)
       .exec();
-
-    console.log('MongoDB Query Debug:', updated);
 
     if (!updated) {
       this.logger.warn(

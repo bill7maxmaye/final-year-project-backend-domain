@@ -27,6 +27,27 @@ export class PostDocument extends BaseDocument {
 
   @Prop({ type: Number, default: 0 })
   reportCount: number;
+
+  @Prop({ type: String })
+  label: string;
+
+  @Prop({ type: Number })
+  score: number;
+
+  @Prop({ type: [String], default: [] })
+  transcription_named_entities: string[];
+
+  @Prop({ type: [String], default: [] })
+  transcription_keywords: string[];
+
+  @Prop({ type: String })
+  transcription_sentiment: string;
+
+  @Prop({ type: String })
+  transcription_text: string;
+
+  @Prop({ type: String })
+  transcription_label: string;
 }
 
 export const PostSchema = SchemaFactory.createForClass(PostDocument);

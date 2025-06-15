@@ -9,7 +9,7 @@ export enum CONTROLLER {
   // 2. Social Posts
   SOCIAL_POSTS = 'social-posts',
   SOCIAL_COMMENTS = 'social-comments',
-  
+
   SOCIAL_REACTIONS = 'social-reactions',
   SOCIAL_SAVED_POSTS = 'social-saved-posts',
   SOCIAL_HIDDEN_POSTS = 'social-hidden-posts',

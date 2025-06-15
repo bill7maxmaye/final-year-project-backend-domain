@@ -37,6 +37,9 @@ export class UserDocument extends BaseDocument {
   @Prop({ type: String })
   profilePic?: string;
 
+  @Prop({ type: String })
+  walletId?: string;
+
   @Prop({ type: [String], default: [] })
   following: string[];
 

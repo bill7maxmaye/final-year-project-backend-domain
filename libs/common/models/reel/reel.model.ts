@@ -42,22 +42,22 @@ export class ReelDocument extends BaseDocument {
   audienceControlUnder18: boolean;
 
   @Prop({ type: [String], default: [] })
-  sceneCategories: string[];
+  transcription_named_entities: string[];
 
   @Prop({ type: [String], default: [] })
-  dominantScenes: string[];
-
-  @Prop({ type: [String], default: [] })
-  detectedObjects: string[];
+  transcription_keywords: string[];
 
   @Prop({ type: String })
-  amharicOcrText: string;
+  transcription_sentiment: string;
+
+  @Prop({ type: String })
+  transcription_text: string;
+
+  @Prop({ type: String })
+  transcription_label: string;
 
   @Prop({ type: String })
   key: string;
-
-  @Prop({ type: String })
-  englishOcrText: string;
 
   @Prop({ type: [String], default: [] })
   videoTypes: string[];
@@ -73,6 +73,15 @@ export class ReelDocument extends BaseDocument {
 
   @Prop({ type: Number, default: 0 })
   shareCount: number;
+
+  @Prop({ type: Number, default: 0 })
+  reportCount: number;
+
+  @Prop({ type: String })
+  label: string;
+
+  @Prop({ type: Number })
+  score: number;
 }
 
 const ReelSchema = SchemaFactory.createForClass(ReelDocument);

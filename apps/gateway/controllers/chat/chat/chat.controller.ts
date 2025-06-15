@@ -46,7 +46,10 @@ export class ChatController {
     this.socketGateway.server
       .to(res.roomId)
       .emit(SOCKET_EVENTS.NEW_MESSAGE, res);
-    const recentChatRto = await this.chatService.getRecentChatRto(user.id, body.receiverId);
+    const recentChatRto = await this.chatService.getRecentChatRto(
+      user.id,
+      body.receiverId,
+    );
 
     this.socketGateway.server
       .to(body.receiverId)

@@ -110,7 +110,10 @@ export class ChatService {
     });
   }
 
-  async getRecentChatRto(senderId: string, receiverId: string): Promise<RecentChatGatewayRTO[]> {
+  async getRecentChatRto(
+    senderId: string,
+    receiverId: string,
+  ): Promise<RecentChatGatewayRTO[]> {
     try {
       const recentChats = await this.networking.send<RecentChatRTO[]>(
         `${MICROSERVICE.CHAT}.${CONTROLLER.MESSAGES}.${ACTION.GET_CHAT_LIST}`,

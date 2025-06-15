@@ -5,6 +5,7 @@ export class User {
     public firstName: string,
     public profilePic: string,
     public lastName: string,
+    public walletId?: string,
     public password?: string,
     public role?: string,
     public createdAt?: Date,

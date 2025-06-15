@@ -13,7 +13,6 @@ export class LikeResponseRTO {
     statusData: LikeResponse,
     likeCount: number,
   ): LikeResponseRTO {
-    // Create and return a new instance using the constructor
     return new LikeResponseRTO(statusData.status, likeCount);
   }
 }

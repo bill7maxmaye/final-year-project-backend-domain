@@ -11,11 +11,7 @@ export class LikeListRto {
 
   static fromFindResult(findResult: FindResult<Like>): LikeListRto {
     const likeRtos = LikeRto.fromEntities(findResult.data);
-    const pagination = new PaginationResponseRto(
-      findResult.total,
-      1, // Assuming page 1 as default
-      10, // Assuming limit of 10 as default
-    );
+    const pagination = new PaginationResponseRto(findResult.total, 1, 10);
     return new LikeListRto(likeRtos, pagination);
   }
 }

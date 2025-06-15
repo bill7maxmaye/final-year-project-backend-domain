@@ -12,6 +12,8 @@ export class Comment extends BaseEntity {
     public parentCommentId: string | null,
     public mentionedUserIds: string[],
     public likes: number,
+    public label: string,
+    public score: number,
   ) {
     super(id, createdAt, updatedAt);
   }
@@ -31,6 +33,8 @@ export class Comment extends BaseEntity {
       document.parentCommentId ? document.parentCommentId.toString() : null,
       document.mentionedUserIds,
       document.likes,
+      document.lable,
+      document.score,
     );
   }
 

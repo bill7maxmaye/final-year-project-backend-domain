@@ -94,7 +94,6 @@ export class StorageService {
 
     for (const file of files) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const result = await this.uploadFile(file);
         uploadResults.push(result);
       } catch (error) {

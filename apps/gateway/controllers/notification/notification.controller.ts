@@ -30,7 +30,6 @@ export class NotificationsController {
     );
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       // const response = await lastValueFrom(
       //   this.networking
       //     .send(
@@ -39,7 +38,6 @@ export class NotificationsController {
       //     )
       //     .pipe(defaultIfEmpty(null)), // ← This avoids EmptyError
       // );
-
       // console.log(
       //   '📥 Received response from Notifications Microservice:',
       //   response,

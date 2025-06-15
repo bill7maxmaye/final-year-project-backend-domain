@@ -24,6 +24,14 @@ export class Reel extends BaseEntity {
     public comments: number,
     public favoriteCount: number,
     public shareCount: number,
+    public reportCount: number,
+    public label: string,
+    public score: number,
+    public transcription_text?: string,
+    public transcription_label?: string,
+    public transcription_sentiment?: string,
+    public transcription_keywords?: string[],
+    public transcription_named_entities?: string[],
   ) {
     super(id, createdAt, updatedAt);
   }
@@ -50,6 +58,14 @@ export class Reel extends BaseEntity {
       document.comments,
       document.favoriteCount,
       document.shareCount,
+      document.reportCount,
+      document.label,
+      document.score,
+      document.transcription_text,
+      document.transcription_label,
+      document.transcription_sentiment,
+      document.transcription_keywords,
+      document.transcription_named_entities,
     );
   }
 

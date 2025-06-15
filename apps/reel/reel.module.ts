@@ -26,6 +26,12 @@ import {
 } from '@app/common//models/reel/report.model';
 import { ReportsRepository } from './report/report.repository';
 import { ReportService } from './report/report.service';
+import {
+  RecommendedReelDocument,
+  RecommendedReelSchema,
+} from '@app/common//models/reel/recommended-reel.model';
+import { RecommendedReelService } from './recommended-reel/recommended-reel.service';
+import { RecommendedReelRepository } from './recommended-reel/recommended-reel.repository';
 
 @Module({
   imports: [
@@ -39,6 +45,7 @@ import { ReportService } from './report/report.service';
       { name: GiftTransactionDocument.name, schema: GiftTransactionSchema },
       { name: LikeDocument.name, schema: LikeSchema },
       { name: ReportDocument.name, schema: ReportSchema },
+      { name: RecommendedReelDocument.name, schema: RecommendedReelSchema },
     ]),
     NetworkingModule,
   ],
@@ -52,6 +59,8 @@ import { ReportService } from './report/report.service';
     ReportsRepository,
     ReelsRepository,
     CommentsRepository,
+    RecommendedReelRepository,
+    RecommendedReelService,
   ],
 })
 export class ReelModule {}

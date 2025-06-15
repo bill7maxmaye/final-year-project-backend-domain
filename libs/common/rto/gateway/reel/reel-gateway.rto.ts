@@ -24,6 +24,11 @@ export class ReelGatewayRto {
     public updatedAt: string,
     public privacy: ReelPrivacy,
     public isLikedByUser: boolean,
+    public transcription_text?: string,
+    public transcription_label?: string,
+    public transcription_sentiment?: string,
+    public transcription_keywords?: string[],
+    public transcription_named_entities?: string[],
   ) {}
 
   static fromPostAggregatedData(
@@ -51,6 +56,11 @@ export class ReelGatewayRto {
       entity.updatedAt,
       entity.privacy,
       entity.isLiked,
+      entity.transcription_text,
+      entity.transcription_label,
+      entity.transcription_sentiment,
+      entity.transcription_keywords,
+      entity.transcription_named_entities,
     );
   }
 }

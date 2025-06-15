@@ -24,6 +24,11 @@ import { LikeableType } from '@app/common//enum/reel/likeable-type.enum';
 import { LikeResponseRTO } from '@app/common//rto/microservices/reel/like-response.rto';
 import { DeleteCommentResponseRto } from '@app/common//rto/microservices/reel/delete-comment-response.rto';
 import { ShareReelResponseRto } from '@app/common//rto/microservices/reel/Share-reel-response.rto';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
+import { SuccessRto } from '@app/common//rto/success.rto';
+import { RecommendedReelService } from './recommended-reel/recommended-reel.service';
+import { RecommendedReelDto } from '@app/common//dto/microservices/reel/recommended-reel.dto';
+import { ReelAnalyticsDto } from '@app/common//dto/microservices/reel/reel-analytics.dto';
 
 @Controller()
 export class ReelController {
@@ -34,6 +39,7 @@ export class ReelController {
     private readonly likeService: LikeService,
     private readonly commentService: CommentService,
     private readonly reportService: ReportService,
+    private readonly recommendedReelService: RecommendedReelService,
   ) {}
 
   @MessagePattern(`${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.CREATE}`)
@@ -88,10 +94,8 @@ export class ReelController {
     @Payload()
     payload: {
       paginationOptions: PaginationOptions;
-      // Ensure 'userid' is typed correctly based on your microservice payload
-      // It should match what the client sends and what you expect.
-      // Make it nullable if unauthenticated users can fetch the feed.
       userid?: string | null;
+      reelIds?: string[];
     },
   ): Promise<ReelRto[]> {
     console.log('Received handleGetManyReels payload:', payload);
@@ -99,6 +103,7 @@ export class ReelController {
     // 2. Fetch the reels using the ReelService
     const reels = await this.reelService.getManyReels(
       payload.paginationOptions,
+      payload.reelIds,
     );
 
     // If no reels are fetched, return an empty array immediately
@@ -117,7 +122,6 @@ export class ReelController {
     let likedReelIds: Set<string> | null = null;
 
     // 5. If a userId is provided in the payload, query the LikeService
-    // Check if payload.userid exists and is not null or empty
     if (payload.userid) {
       console.log(
         `User ${payload.userid} is logged in. Checking liked reels...`,
@@ -125,35 +129,28 @@ export class ReelController {
       try {
         likedReelIds = await this.likeService.findLikedTargetIds(
           payload.userid,
-          reelIdSet, // Pass the set of IDs to check
-          LikeableType.REEL, // Specify the target type
+          reelIdSet,
+          LikeableType.REEL,
         );
         console.log(
           `Found ${likedReelIds.size} liked reels for user ${payload.userid} among the fetched ones.`,
         );
       } catch (error) {
-        // Log the error but don't block the feed fetching.
-        // Treat it as if the user liked none of the reels for this request.
         console.error(
           `Error fetching liked reel IDs for user ${payload.userid}:`,
           error,
         );
-        likedReelIds = new Set(); // Fallback to empty set on error
+        likedReelIds = new Set();
       }
     } else {
       console.log(
         'User ID not provided. Returning reels without like status for current user.',
       );
-      // likedReelIds remains null, which ReelRto.fromEntities handles by setting isLiked to false
     }
 
-    // 6. Map the fetched Reel entities to ReelRto, passing the likedReelIds set
-    // The fromEntities method in ReelRto is designed to use this set
-    // to determine the 'isLiked' status for each reel.
     const reelRtos = ReelRto.fromEntities(reels, likedReelIds);
     console.log(`Mapped ${reelRtos.length} reels to RTOs.`);
 
-    // 7. Return the resulting ReelRto array
     return reelRtos;
   }
 
@@ -334,14 +331,11 @@ export class ReelController {
     @Payload() createCommentDto: CreateCommentDto,
   ): Promise<CommentRto> {
     try {
-      this.logger.log(createCommentDto);
       const comment = await this.commentService.createComment(createCommentDto);
 
       const currentCommentCount = await this.reelService.incrementCommentCount(
         createCommentDto.body.reelId,
       );
-
-      console.log(comment, currentCommentCount);
 
       return CommentRto.fromEntity(comment, currentCommentCount);
     } catch (error) {
@@ -564,6 +558,48 @@ export class ReelController {
   }
 
   @MessagePattern(
+    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.MODERATION_RESULT}`,
+  )
+  async handleReelModerationResult(
+    @Payload() payload: { reelId: string; moderation: ModerationDto },
+  ): Promise<SuccessRto> {
+    console.log(JSON.stringify(payload));
+    try {
+      await this.reelService.moderationResult(
+        payload.reelId,
+        payload.moderation,
+      );
+      return new SuccessRto();
+    } catch (error) {
+      this.logger.error(
+        `Error reel moderation result ${payload.reelId}: ${error}`,
+      );
+      throw error;
+    }
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.REELS}.${CONTROLLER.REEL_COMMENTS}.${ACTION.COMMENT_MODERATION_RESULT}`,
+  )
+  async handleCommentModerationResult(
+    @Payload() payload: { commentId: string; moderation: ModerationDto },
+  ): Promise<SuccessRto> {
+    console.log(JSON.stringify(payload));
+    try {
+      await this.commentService.moderationResult(
+        payload.commentId,
+        payload.moderation,
+      );
+      return new SuccessRto();
+    } catch (error) {
+      this.logger.error(
+        `Error comment moderation result ${payload.commentId}: ${error}`,
+      );
+      throw error;
+    }
+  }
+
+  @MessagePattern(
     `${MICROSERVICE.REELS}.${CONTROLLER.REPORTS}.${ACTION.GET_REPORTS_BY_ENTITY}`,
   )
   async handleGetReportsByEntity(
@@ -590,143 +626,93 @@ export class ReelController {
     }
   }
 
-  @MessagePattern(`${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.SEARCH}`)
-  async handleSearchReels(
-    @Payload()
-    payload: {
-      query: string;
-      paginationOptions: PaginationOptions;
-      userid?: string | null;
-    },
-  ): Promise<ReelRto[]> {
-    this.logger.log(
-      `Handling search reels with query "${payload.query}" and pagination: page=${payload.paginationOptions.page}, limit=${payload.paginationOptions.limit}`,
-    );
-
-    // 1. Search for reels using the ReelService
-    const reels = await this.reelService.searchReels(
-      payload.query,
-      payload.paginationOptions,
-    );
-
-    // If no reels are found, return an empty array immediately
-    if (!reels || reels.length === 0) {
-      this.logger.log('No reels found matching the search query.');
-      return [];
-    }
-
-    // 2. Extract the IDs of the found reels and put them in a Set
-    const reelIdSet = new Set<string>(reels.map((reel) => reel.id));
-    this.logger.log(
-      `Found ${reels.length} reels matching the search query. Extracted IDs: ${Array.from(reelIdSet).join(', ')}`,
-    );
-
-    // 3. Initialize a variable for liked reel IDs set
-    let likedReelIds: Set<string> | null = null;
-
-    // 4. If a userId is provided, query the LikeService
-    if (payload.userid) {
-      this.logger.log(
-        `User ${payload.userid} is logged in. Checking liked reels...`,
-      );
-      try {
-        likedReelIds = await this.likeService.findLikedTargetIds(
-          payload.userid,
-          reelIdSet,
-          LikeableType.REEL,
-        );
-        this.logger.log(
-          `Found ${likedReelIds.size} liked reels for user ${payload.userid} among the search results.`,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Error fetching liked reel IDs for user ${payload.userid}:`,
-          error,
-        );
-        likedReelIds = new Set(); // Fallback to empty set on error
-      }
-    } else {
-      this.logger.log(
-        'User ID not provided. Returning search results without like status for current user.',
-      );
-    }
-
-    // 5. Map the found Reel entities to ReelRto
-    const reelRtos = ReelRto.fromEntities(reels, likedReelIds);
-    this.logger.log(`Mapped ${reelRtos.length} reels to RTOs.`);
-
-    // 6. Return the resulting ReelRto array
-    return reelRtos;
-  }
-
   @MessagePattern(
-    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_BY_USER_ID}`,
+    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.UPDATE_RECOMMENDATIONS}`,
   )
-  async handleGetReelsByUserId(
+  async handleUpdateRecommendations(
     @Payload()
     payload: {
       userId: string;
-      paginationOptions: PaginationOptions;
-      userid?: string | null;
+      recommendedReels: Array<{ reelId: string; score: number }>;
     },
-  ): Promise<ReelRto[]> {
+  ): Promise<RecommendedReelDto> {
     this.logger.log(
-      `Handling get reels by user ID ${payload.userId} with pagination: page=${payload.paginationOptions.page}, limit=${payload.paginationOptions.limit}`,
+      `Handling update recommendations for user ${payload.userId} with ${payload.recommendedReels.length} recommendations`,
     );
 
-    // 1. Fetch the reels using the ReelService
-    const reels = await this.reelService.getReelsByUserId(
-      payload.userId,
-      payload.paginationOptions,
-    );
+    try {
+      const updatedRecommendations =
+        await this.recommendedReelService.updateRecommendations(
+          payload.userId,
+          payload.recommendedReels,
+        );
 
-    // If no reels are found, return an empty array immediately
-    if (!reels || reels.length === 0) {
-      this.logger.log(`No reels found for user ${payload.userId}.`);
-      return [];
+      this.logger.log(
+        `Successfully updated recommendations for user ${payload.userId}`,
+      );
+
+      return updatedRecommendations;
+    } catch (error) {
+      this.logger.error(
+        `Error updating recommendations for user ${payload.userId}:`,
+        error,
+      );
+      throw error;
     }
+  }
 
-    // 2. Extract the IDs of the fetched reels and put them in a Set
-    const reelIdSet = new Set<string>(reels.map((reel) => reel.id));
+  @MessagePattern(
+    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_RECOMMENDATIONS_BY_SCORE}`,
+  )
+  async handleGetRecommendationsByScore(
+    @Payload()
+    payload: {
+      userId: string;
+      minScore: number;
+      limit?: number;
+    },
+  ): Promise<RecommendedReelDto> {
     this.logger.log(
-      `Fetched ${reels.length} reels for user ${payload.userId}. Extracted IDs: ${Array.from(reelIdSet).join(', ')}`,
+      `Handling get recommendations by score for user ${payload.userId} with minimum score ${payload.minScore}`,
     );
 
-    // 3. Initialize a variable for liked reel IDs set
-    let likedReelIds: Set<string> | null = null;
+    try {
+      const recommendations =
+        await this.recommendedReelService.getRecommendationsByScore(
+          payload.userId,
+          payload.minScore,
+          payload.limit,
+        );
 
-    // 4. If a userId is provided, query the LikeService
-    if (payload.userid) {
       this.logger.log(
-        `User ${payload.userid} is logged in. Checking liked reels...`,
+        `Successfully retrieved recommendations for user ${payload.userId} with minimum score ${payload.minScore}`,
       );
-      try {
-        likedReelIds = await this.likeService.findLikedTargetIds(
-          payload.userid,
-          reelIdSet,
-          LikeableType.REEL,
-        );
-        this.logger.log(
-          `Found ${likedReelIds.size} liked reels for user ${payload.userid} among the fetched ones.`,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Error fetching liked reel IDs for user ${payload.userid}:`,
-          error,
-        );
-        likedReelIds = new Set(); // Fallback to empty set on error
-      }
-    } else {
-      this.logger.log(
-        'User ID not provided. Returning reels without like status for current user.',
+
+      return recommendations;
+    } catch (error) {
+      this.logger.error(
+        `Error getting recommendations by score for user ${payload.userId}:`,
+        error,
       );
+      throw error;
     }
+  }
 
-    // 5. Map the fetched Reel entities to ReelRto
-    const reelRtos = ReelRto.fromEntities(reels, likedReelIds);
-    this.logger.log(`Mapped ${reelRtos.length} reels to RTOs.`);
+  @MessagePattern(
+    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.INCREMENT_REPORT_COUNT}`,
+  )
+  async handleIncrementReportCount(@Payload() reelId: string): Promise<number> {
+    this.logger.log(`Incrementing report count for reel ${reelId}`);
+    return this.reelService.incrementReportCount(reelId);
+  }
 
-    // 6. Return the resulting ReelRto array
-    return reelRtos;
+  @MessagePattern(
+    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_LIKED_REELS_ANALYTICS}`,
+  )
+  async handleGetLikedReelsAnalytics(
+    @Payload() userId: string,
+  ): Promise<ReelAnalyticsDto> {
+    this.logger.log(`Getting liked reels analytics for user ${userId}`);
+    return this.reelService.getLikedReelsAnalytics(userId);
   }
 }

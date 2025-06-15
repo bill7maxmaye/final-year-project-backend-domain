@@ -7,6 +7,8 @@ import { UpdateReelDto } from '@app/common//dto/microservices/reel/update-reel.d
 import { PaginationOptions } from '@app/common//dto/interface/pagination-options.interface';
 import { LikeResponse } from '@app/common//dto/interface/like.interface';
 import { ReelDocument } from '@app/common//models/reel/reel.model';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
+import { ReelAnalyticsDto } from '@app/common//dto/microservices/reel/reel-analytics.dto';
 
 @Injectable()
 export class ReelService {
@@ -50,7 +52,35 @@ export class ReelService {
         $set: updateReelDto.body,
       };
 
-      console.log('Update Object:', updateObject);
+      // console.log('Update Object:', updateObject);
+
+      const updatedReel = await this.reelRepository.updateOneAndRetrieve(
+        { _id: new Types.ObjectId(id) },
+        updateObject,
+      );
+
+      return Reel.fromDocument(updatedReel);
+    } catch (error: any) {
+      if (error) {
+        throw new NotFoundException(`Invalid Reel ID format "${id}"`);
+      }
+      throw error;
+    }
+  }
+
+  async moderationResult(
+    id: string,
+    moderationDto: ModerationDto,
+  ): Promise<Reel> {
+    try {
+      const updateObject: UpdateQuery<Reel> = {
+        $set: {
+          label: moderationDto.label,
+          score: moderationDto.score,
+        },
+      };
+
+      console.log('Update Object here:', id, updateObject);
 
       const updatedReel = await this.reelRepository.updateOneAndRetrieve(
         { _id: new Types.ObjectId(id) },
@@ -85,12 +115,19 @@ export class ReelService {
     }
   }
 
-  async getManyReels(paginationOptions: PaginationOptions): Promise<Reel[]> {
+  async getManyReels(
+    paginationOptions: PaginationOptions,
+    reelIds?: string[],
+  ): Promise<Reel[]> {
     const { page, limit } = paginationOptions;
     const skip = (page - 1) * limit;
 
     try {
       const filterQuery: FilterQuery<Reel> = {};
+
+      if (reelIds && reelIds.length > 0) {
+        filterQuery._id = { $in: reelIds.map((id) => new Types.ObjectId(id)) };
+      }
 
       const reels = await this.reelRepository
         .find(filterQuery)
@@ -217,7 +254,7 @@ export class ReelService {
       ); // Used reelId for clarity
     }
 
-    console.log('objectIdReel', objectIdReel);
+    // console.log('objectIdReel', objectIdReel);
 
     const updateOperation: UpdateQuery<ReelDocument> = {
       $inc: { comments: 1 },
@@ -319,53 +356,79 @@ export class ReelService {
     }
   }
 
-  async searchReels(query: string, paginationOptions: PaginationOptions): Promise<Reel[]> {
-    const { page, limit } = paginationOptions;
-    const skip = (page - 1) * limit;
+  async incrementReportCount(reelId: string): Promise<number> {
+    let objectIdReel: Types.ObjectId;
+    try {
+      objectIdReel = new Types.ObjectId(reelId);
+    } catch (error: any) {
+      throw new NotFoundException(`Invalid Reel ID format "${error}"`);
+    }
+
+    const updateOperation: UpdateQuery<ReelDocument> = {
+      $inc: { reportCount: 1 },
+    };
 
     try {
-      const filterQuery: FilterQuery<ReelDocument> = {
-        description: { $regex: query, $options: 'i' } // Case-insensitive search
-      };
+      const updatedReelDocument =
+        await this.reelRepository.updateOneAndRetrieve(
+          { _id: objectIdReel },
+          updateOperation,
+        );
 
-      const reels = await this.reelRepository
-        .find(filterQuery)
-        .skip(skip)
-        .limit(limit)
-        .exec();
+      if (!updatedReelDocument) {
+        throw new NotFoundException(
+          `Reel with ID "${reelId}" not found or could not be updated`,
+        );
+      }
 
-      return Reel.fromDocuments(reels);
-    } catch (error: any) {
-      console.error('Error searching reels:', error);
+      return updatedReelDocument.reportCount;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error(`Error updating report count for reel ${reelId}:`, error);
       throw error;
     }
   }
 
-  async getReelsByUserId(
-    userId: string,
-    paginationOptions: PaginationOptions,
-  ): Promise<Reel[]> {
-    const { page, limit } = paginationOptions;
-    const skip = (page - 1) * limit;
-
+  async getLikedReelsAnalytics(userId: string): Promise<ReelAnalyticsDto> {
     try {
-      const filterQuery: FilterQuery<Reel> = {
-        ownerId: new Types.ObjectId(userId),
-      };
+      // Get all reels liked by the user
+      const likedReels = await this.reelRepository.find({
+        'likes.userId': new Types.ObjectId(userId),
+      });
 
-      const reels = await this.reelRepository
-        .find(filterQuery)
-        .skip(skip)
-        .limit(limit)
-        .sort({ createdAt: -1 })
-        .exec();
-
-      return Reel.fromDocuments(reels);
-    } catch (error: any) {
-      if (error instanceof Types.ObjectId) {
-        throw new NotFoundException(`Invalid User ID "${userId}"`);
+      if (!likedReels || likedReels.length === 0) {
+        return {
+          totalReels: 0,
+          labelAnalytics: [],
+        };
       }
-      console.error('Error fetching reels by user ID:', error);
+
+      // Count labels
+      const labelCounts = new Map<string, number>();
+      likedReels.forEach((reel) => {
+        if (reel.label) {
+          labelCounts.set(reel.label, (labelCounts.get(reel.label) || 0) + 1);
+        }
+      });
+
+      // Calculate percentages and create analytics
+      const totalReels = likedReels.length;
+      const labelAnalytics = Array.from(labelCounts.entries()).map(
+        ([label, count]) => ({
+          label,
+          count,
+          percentage: (count / totalReels) * 100,
+        }),
+      );
+
+      return {
+        totalReels,
+        labelAnalytics,
+      };
+    } catch (error) {
+      console.error('Error getting liked reels analytics:', error);
       throw error;
     }
   }
