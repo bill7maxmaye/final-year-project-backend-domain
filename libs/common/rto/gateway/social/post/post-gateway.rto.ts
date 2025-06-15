@@ -11,6 +11,7 @@ export class PostGatewayRto {
     public createdAt: Date,
     public updatedAt: Date,
     public owner: UserRto,
+    public reportCount: number = 0,
   ) {}
 
   static fromEntity(post: PostRto, user: UserRto): PostGatewayRto {
@@ -23,6 +24,7 @@ export class PostGatewayRto {
       post.createdAt,
       post.updatedAt,
       user,
+      post.reportCount ?? 0,
     );
   }
 }

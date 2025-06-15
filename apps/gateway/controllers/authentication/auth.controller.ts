@@ -398,4 +398,33 @@ export class AuthenticationController {
     );
     return res;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete-account')
+  async deleteUser(@ActiveUser() user: User): Promise<{ success: boolean }> {
+    return this.networking.send<{ success: boolean }>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.DELETE_USER}`,
+      { userId: user.id },
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('users/:userId')
+  async deleteUserById(
+    @Param('userId') userId: string,
+    @ActiveUser() user: User,
+  ): Promise<{ success: boolean }> {
+    // Check if the current user is an admin
+    if (user.role !== 'admin') {
+      throw new HttpException(
+        'Only administrators can delete users',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    return this.networking.send<{ success: boolean }>(
+      `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.DELETE_USER}`,
+      { userId },
+    );
+  }
 }
