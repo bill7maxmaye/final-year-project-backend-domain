@@ -62,6 +62,7 @@ export class PostService {
   async deletePost(id: string): Promise<boolean> {
     try {
       const post = await this.postRepository.findOneAndDelete({ _id: id });
+      await this.postReportRepository.deleteMany({ content_id: id });
 
       return post !== null;
     } catch (error) {
