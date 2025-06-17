@@ -34,6 +34,7 @@ import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
 import { PostGatewayRto } from '@app/common//rto/gateway/social/post/post-gateway.rto';
 import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 import { PostReportRto } from '@app/common//rto/social/post/post-report.rto';
+import { PostService } from './post.service';
 
 @Controller('social')
 @UseGuards(JwtAuthGuard)
@@ -43,12 +44,23 @@ export class PostController {
   constructor(
     private readonly networking: NetworkingService,
     private readonly storageService: StorageService,
+    private readonly postService: PostService,
   ) {}
 
   @Get('test')
   test(@ActiveUser() user: User): { message: string } {
     console.log('User:', user);
     return { message: 'Hello from PostController!' };
+  }
+
+  @Get('stats')
+  async getCollectionStats() {
+    try {
+      return await this.postService.getCollectionStats();
+    } catch (error) {
+      this.logger.error('Error getting collection stats:', error);
+      throw error;
+    }
   }
 
   @Post('posts')

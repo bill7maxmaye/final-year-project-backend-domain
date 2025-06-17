@@ -8,9 +8,12 @@ import { CommentDocument } from '@app/common//models/reel/comment.model';
 import { PostCommentDocument } from '@app/common//models/social/comment.model';
 import { FindResult } from '@app/common//rto/find-result';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class CommentService {
+  private readonly logger = new Logger(CommentService.name);
+
   constructor(
     private readonly commentRepository: PostCommentRepository,
     private readonly postRepository: PostRepository,
@@ -241,5 +244,14 @@ export class CommentService {
       : undefined;
 
     return FindResult.fromListAll(data, total, next, previous);
+  }
+
+  async countDocuments(): Promise<number> {
+    try {
+      return await this.commentRepository.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting comments:', error);
+      throw error;
+    }
   }
 }

@@ -715,4 +715,24 @@ export class ReelController {
     this.logger.log(`Getting liked reels analytics for user ${userId}`);
     return this.reelService.getLikedReelsAnalytics(userId);
   }
+
+  @MessagePattern(`${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.COUNT}`)
+  async countReels(): Promise<number> {
+    try {
+      return await this.reelService.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting reels:', error);
+      throw error;
+    }
+  }
+
+  @MessagePattern(`${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.COUNT_REPORTS}`)
+  async countReelReports(): Promise<number> {
+    try {
+      return await this.reelService.countReports();
+    } catch (error) {
+      this.logger.error('Error counting reel reports:', error);
+      throw error;
+    }
+  }
 }

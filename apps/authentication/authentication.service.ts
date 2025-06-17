@@ -13,17 +13,21 @@ import {
   UserStatus,
 } from '@app/common//models/authentication/user.model';
 import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { EmailService } from './email.service';
 import { StorageService } from 'apps/gateway/storage/storage.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthenticationService {
+  private readonly logger = new Logger(AuthenticationService.name);
+
   constructor(
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
     private readonly userRepository: UserRepository,
     private readonly emailService: EmailService,
     private readonly storageService: StorageService,
@@ -687,6 +691,15 @@ export class AuthenticationService {
         HttpStatus.INTERNAL_SERVER_ERROR,
         MicroserviceErrorCode.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  async countUsers(): Promise<number> {
+    try {
+      return await this.userRepository.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting users:', error);
+      throw error;
     }
   }
 }

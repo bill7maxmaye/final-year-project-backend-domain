@@ -164,4 +164,14 @@ export class CommentController {
       throw error;
     }
   }
+
+  @MessagePattern(`${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.COUNT}`)
+  async countComments(): Promise<number> {
+    try {
+      return await this.service.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting comments:', error);
+      throw error;
+    }
+  }
 }
