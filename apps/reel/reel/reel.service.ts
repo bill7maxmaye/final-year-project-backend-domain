@@ -9,10 +9,18 @@ import { LikeResponse } from '@app/common//dto/interface/like.interface';
 import { ReelDocument } from '@app/common//models/reel/reel.model';
 import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 import { ReelAnalyticsDto } from '@app/common//dto/microservices/reel/reel-analytics.dto';
+import { Logger } from '@nestjs/common';
+import { ReportsRepository } from '../report/report.repository';
+// import { ReportRepository } from '@app/common//repositories/report/report.repository';
 
 @Injectable()
 export class ReelService {
-  constructor(private readonly reelRepository: ReelsRepository) {}
+  private readonly logger = new Logger(ReelService.name);
+
+  constructor(
+    private readonly reelRepository: ReelsRepository,
+    private readonly reportRepository: ReportsRepository,
+  ) {}
 
   async createReel(createReelDto: CreateReelDto): Promise<Reel> {
     try {
@@ -429,6 +437,24 @@ export class ReelService {
       };
     } catch (error) {
       console.error('Error getting liked reels analytics:', error);
+      throw error;
+    }
+  }
+
+  async countDocuments(): Promise<number> {
+    try {
+      return await this.reelRepository.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting reels:', error);
+      throw error;
+    }
+  }
+
+  async countReports(): Promise<number> {
+    try {
+      return await this.reportRepository.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting reel reports:', error);
       throw error;
     }
   }

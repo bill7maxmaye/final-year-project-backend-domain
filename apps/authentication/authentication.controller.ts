@@ -14,9 +14,12 @@ import { ACTION } from 'libs/common/enum/action.enum';
 import { CONTROLLER } from 'libs/common/enum/controller.enum';
 import { MICROSERVICE } from 'libs/common/enum/microservice.enum';
 import { AuthenticationService } from './authentication.service';
+import { Logger } from '@nestjs/common';
 
 @Controller()
 export class AuthenticationController {
+  private readonly logger = new Logger(AuthenticationController.name);
+
   constructor(
     private configService: ConfigService,
     private readonly authenticationService: AuthenticationService,
@@ -246,5 +249,17 @@ export class AuthenticationController {
   ): Promise<{ success: boolean }> {
     const result = await this.authenticationService.deleteUser(data.userId);
     return { success: result };
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.AUTHENTICATION}.${CONTROLLER.AUTH}.${ACTION.COUNT_USERS}`,
+  )
+  async countUsers(): Promise<number> {
+    try {
+      return await this.authenticationService.countUsers();
+    } catch (error) {
+      this.logger.error('Error counting users:', error);
+      throw error;
+    }
   }
 }

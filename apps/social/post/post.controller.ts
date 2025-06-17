@@ -231,4 +231,28 @@ export class PostController {
       throw error;
     }
   }
+
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.COUNT}`,
+  )
+  async countPosts(): Promise<number> {
+    try {
+      return await this.service.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting posts:', error);
+      throw error;
+    }
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.COUNT_REPORTS}`,
+  )
+  async countPostReports(): Promise<number> {
+    try {
+      return await this.service.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting post reports:', error);
+      throw error;
+    }
+  }
 }

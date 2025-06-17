@@ -30,11 +30,7 @@ import { CommentService } from './controllers/social/comment/comment.service';
 import { CommentController as ReelCommentController } from './controllers/reel/comment/comment.controller';
 import { UserRepositoryModule } from '@app/common//baseRepository/userRepository/user.repository.module';
 import { HttpModule } from '@nestjs/axios';
-import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
-import { ReelsRepository } from 'apps/reel/reel/reel.repository';
-import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
-import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
-import { ReportsRepository } from 'apps/reel/report/report.repository';
+
 // import { AuthenticationModule } from 'apps/authentication/authentication.module';
 
 @Module({

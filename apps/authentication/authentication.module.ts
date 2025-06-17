@@ -16,6 +16,7 @@ import { EmailService } from './email.service';
 import { StorageModule } from 'apps/gateway/storage/storage.module';
 import { s3Provider } from 'apps/gateway/storage/storage.provider';
 import s3StorageConfig from '@app/common//config/s3-storage.config';
+import { JwtService } from '@nestjs/jwt';
 
 // import { DatabaseModule } from 'libs/common';
 @Module({
@@ -45,7 +46,13 @@ import s3StorageConfig from '@app/common//config/s3-storage.config';
     StorageModule,
   ],
   controllers: [AuthenticationController],
-  providers: [AuthenticationService, UserRepository, EmailService, s3Provider],
+  providers: [
+    AuthenticationService,
+    UserRepository,
+    EmailService,
+    s3Provider,
+    JwtService,
+  ],
   exports: [AuthenticationService, UserRepository, EmailService],
 })
 export class AuthenticationModule {}
