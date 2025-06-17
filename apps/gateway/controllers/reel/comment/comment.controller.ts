@@ -140,7 +140,6 @@ export class CommentController {
             CreateNotificationDto.fromCommentRemoved(
               new Types.ObjectId(ownerId),
               new Types.ObjectId(commentId),
-              new Types.ObjectId('userId'),
               content,
             );
 
