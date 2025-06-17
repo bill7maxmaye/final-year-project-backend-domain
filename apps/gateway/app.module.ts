@@ -82,11 +82,6 @@ import { ReportsRepository } from 'apps/reel/report/report.repository';
     CommentService,
     JwtStrategy,
     SocketGateway,
-    PostRepository,
-    ReelsRepository,
-    PostCommentRepository,
-    PostReportRepository,
-    ReportsRepository,
   ],
 })
 export class AppModule {}
