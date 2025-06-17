@@ -13,9 +13,12 @@ import { FindResult } from '@app/common//rto/find-result';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { NetworkingService } from '@pp/networking';
 import { FilterQuery, Types } from 'mongoose';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class PostService {
+  private readonly logger = new Logger(PostService.name);
+
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postReportRepository: PostReportRepository,
@@ -367,5 +370,23 @@ export class PostService {
     const previous = prevPage ? `?${buildQueryParams(prevPage)}` : undefined;
 
     return FindResult.fromListAll(data, total, next, previous);
+  }
+
+  async countDocuments(): Promise<number> {
+    try {
+      return await this.postRepository.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting posts:', error);
+      throw error;
+    }
+  }
+
+  async countReports(): Promise<number> {
+    try {
+      return await this.postReportRepository.countDocuments();
+    } catch (error) {
+      this.logger.error('Error counting post reports:', error);
+      throw error;
+    }
   }
 }

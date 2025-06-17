@@ -1,11 +1,15 @@
 import { ActiveUser } from '@app/common//decorators/active-user-decorator';
 import { User } from '@app/common//entities/user/user-entity';
 import { JwtAuthGuard } from '@app/common//guards/jwt-auth.guard';
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Logger, UseGuards } from '@nestjs/common';
+import { SocialService } from './social.service';
 
-@Controller('social')
+@Controller('socials')
+@UseGuards(JwtAuthGuard)
 export class SocialController {
-  constructor() {}
+  private readonly logger = new Logger(SocialController.name);
+
+  constructor(private readonly socialService: SocialService) {}
 
   @Get('')
   @UseGuards(JwtAuthGuard)
