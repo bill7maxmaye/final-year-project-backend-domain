@@ -20,13 +20,13 @@ import { User } from '@app/common//entities/user/user-entity';
 import { ActiveUser } from '@app/common//decorators/active-user-decorator';
 import { PostService } from './controllers/social/post/post.service';
 import { CommentService } from './controllers/social/comment/comment.service';
-import { UserRepository } from '@app/common//baseRepository/userRepository/user.repository';
-import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
-import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
+// import { UserRepository } from '@app/common//baseRepository/userRepository/user.repository';
+// import  { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
+// import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
 import { ReelService } from './controllers/reel/reel.service';
-import { ReelsRepository } from 'apps/reel/reel/reel.repository';
-import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
-import { ReportsRepository } from 'apps/reel/report/report.repository';
+// import { ReelsRepository } from 'apps/reel/reel/reel.repository';
+// import { PostReportRepository } from '@app/common//baseRepository/social/post-repositories/report-repository';
+// import { ReportsRepository } from 'apps/reel/report/report.repository';
 import { StorageService } from './storage/storage.service';
 
 // const TEMP_UPLOAD_DIR_WINDOWS = path.join(os.tmpdir(), 'image_uploads_nestjs');
@@ -47,12 +47,12 @@ export class AppController {
     private readonly postService: PostService,
     private readonly reelService: ReelService,
     private readonly commentService: CommentService,
-    private readonly userRepository: UserRepository,
-    private readonly postRepository: PostRepository,
-    private readonly reelRepository: ReelsRepository,
-    private readonly commentRepository: PostCommentRepository,
-    private readonly postReportRepository: PostReportRepository,
-    private readonly reelReportRepository: ReportsRepository,
+    // private readonly userRepository: UserRepository,
+    // private readonly postRepository: PostRepository,
+    // private readonly reelRepository: ReelsRepository,
+    // private readonly commentRepository: PostCommentRepository,
+    // private readonly postReportRepository: PostReportRepository,
+    // private readonly reelReportRepository: ReportsRepository,
   ) {}
 
   @Get('/')
@@ -118,40 +118,40 @@ export class AppController {
     }
   }
 
-  @Get('stats')
-  async getCollectionStats() {
-    try {
-      const [
-        postCount,
-        reelCount,
-        commentCount,
-        userCount,
-        postReportCount,
-        reelReportCount,
-      ] = await Promise.all([
-        this.postRepository.countDocuments(),
-        this.reelRepository.countDocuments(),
-        this.commentRepository.countDocuments(),
-        this.userRepository.countDocuments(),
-        this.postReportRepository.countDocuments(),
-        this.reelReportRepository.countDocuments(),
-      ]);
+  // @Get('stats')
+  // async getCollectionStats() {
+  //   try {
+  //     const [
+  //       postCount,
+  //       reelCount,
+  //       commentCount,
+  //       userCount,
+  //       postReportCount,
+  //       reelReportCount,
+  //     ] = await Promise.all([
+  //       this.postRepository.countDocuments(),
+  //       this.reelRepository.countDocuments(),
+  //       this.commentRepository.countDocuments(),
+  //       this.userRepository.countDocuments(),
+  //       this.postReportRepository.countDocuments(),
+  //       this.reelReportRepository.countDocuments(),
+  //     ]);
 
-      return {
-        posts: postCount,
-        reels: reelCount,
-        comments: commentCount,
-        users: userCount,
-        reports: {
-          posts: postReportCount,
-          reels: reelReportCount,
-          total: postReportCount + reelReportCount,
-        },
-        total: postCount + reelCount + commentCount + userCount + postReportCount + reelReportCount,
-      };
-    } catch (error) {
-      this.logger.error('Error getting collection stats:', error);
-      throw error;
-    }
-  }
+  //     return {
+  //       posts: postCount,
+  //       reels: reelCount,
+  //       comments: commentCount,
+  //       users: userCount,
+  //       reports: {
+  //         posts: postReportCount,
+  //         reels: reelReportCount,
+  //         total: postReportCount + reelReportCount,
+  //       },
+  //       total: postCount + reelCount + commentCount + userCount + postReportCount + reelReportCount,
+  //     };
+  //   } catch (error) {
+  //     this.logger.error('Error getting collection stats:', error);
+  //     throw error;
+  //   }
+  // }
 }

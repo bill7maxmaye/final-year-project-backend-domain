@@ -33,6 +33,8 @@ import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
+import { CreateNotificationDto } from '@app/common//dto/microservices/notification/create-notification-dto';
+import { Types } from 'mongoose';
 
 export class PredictionDto {
   label: string;
@@ -76,7 +78,11 @@ export class CommentController {
         response.ownerId,
       );
 
-      void this.moderateComment(response.id, createCommentDto.content);
+      void this.moderateComment(
+        response.id,
+        createCommentDto.content,
+        response.ownerId,
+      );
       return this.reelService.populate(authorDetails, response);
     } catch (error) {
       this.logger.error('Error during create:', error);
@@ -88,6 +94,7 @@ export class CommentController {
   private async moderateComment(
     commentId: string,
     content: string,
+    ownerId: string,
   ): Promise<void> {
     try {
       console.log('Am here');
@@ -129,6 +136,19 @@ export class CommentController {
         );
       } else if (prediction.label === 'hate' && prediction.score >= 0.8) {
         try {
+          const createNotificationDto =
+            CreateNotificationDto.fromCommentRemoved(
+              new Types.ObjectId(ownerId),
+              new Types.ObjectId(commentId),
+              new Types.ObjectId('userId'),
+              content,
+            );
+
+          this.networking.emit(
+            `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
+            createNotificationDto,
+          );
+
           await this.networking.send<DeleteCommentResponseRto>(
             `${MICROSERVICE.REELS}.${CONTROLLER.REEL_COMMENTS}.${ACTION.DELETE}`,
             { id: commentId },

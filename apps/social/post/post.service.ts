@@ -87,7 +87,7 @@ export class PostService {
 
       if (!isLiked) {
         const createNotificationDto = CreateNotificationDto.fromLikePost(
-          new Types.ObjectId(post.authorId), // Assuming post.userId is the owner of the post
+          new Types.ObjectId(post.authorId),
           post._id,
           new Types.ObjectId(userId),
         );
