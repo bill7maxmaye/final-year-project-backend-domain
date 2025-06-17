@@ -8,7 +8,7 @@ export class CreateNotificationDto {
     public readonly type: NotificationType,
     public readonly isRead: boolean,
     public readonly entityIds: Types.ObjectId[],
-    public readonly senders: Types.ObjectId[],
+    public readonly senders: Types.ObjectId[] = [],
   ) {}
 
   static fromLikePost(
@@ -23,6 +23,47 @@ export class CreateNotificationDto {
       false,
       [postId],
       [senderId],
+    );
+  }
+
+  static fromPostRemoved(
+    receiverId: Types.ObjectId,
+    postId: Types.ObjectId,
+    content: string,
+  ): CreateNotificationDto {
+    return new CreateNotificationDto(
+      receiverId,
+      `Your post ${content} has been removed because it does not follow our reel content policy.`,
+      NotificationType.POST_REMOVED,
+      false,
+      [postId],
+    );
+  }
+
+  static fromReelRemoved(
+    receiverId: Types.ObjectId,
+    postId: Types.ObjectId,
+    description: string,
+  ): CreateNotificationDto {
+    return new CreateNotificationDto(
+      receiverId,
+      `Your reel ${description} has been removed because it does not follow our reel content policy.`,
+      NotificationType.REEL_REMOVED,
+      false,
+      [postId],
+    );
+  }
+  static fromCommentRemoved(
+    receiverId: Types.ObjectId,
+    postId: Types.ObjectId,
+    content: string,
+  ): CreateNotificationDto {
+    return new CreateNotificationDto(
+      receiverId,
+      `Your comment was removed from ${content}.`,
+      NotificationType.COMMENT_REMOVED,
+      false,
+      [postId],
     );
   }
 }

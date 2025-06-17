@@ -9,4 +9,7 @@ export enum NotificationType {
   MESSAGE = 'message',
   FRIEND_REQUEST = 'friend_request',
   FRIEND_REQUEST_ACCEPTED = 'friend_request_accepted',
+  COMMENT_REMOVED = 'comment-removed',
+  POST_REMOVED = 'post-removed',
+  REEL_REMOVED = 'reel-removed',
 }
