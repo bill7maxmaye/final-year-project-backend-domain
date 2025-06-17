@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostReportDocument } from '@app/common//models/social/post-report.model';
-import { Model } from 'mongoose';
+import { Model, FilterQuery } from 'mongoose';
 import { BaseRepository } from '../../base-repository';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -10,6 +10,13 @@ export class PostReportRepository extends BaseRepository<PostReportDocument> {
     @InjectModel(PostReportDocument.name) postModel: Model<PostReportDocument>,
   ) {
     super(postModel);
+  }
+
+  async deleteMany(
+    filter: FilterQuery<PostReportDocument>,
+  ): Promise<{ deletedCount: number }> {
+    const result = await this.model.deleteMany(filter);
+    return { deletedCount: result.deletedCount };
   }
 
   // async findPostsByAuthor(authorId: string): Promise<PostDocument[]> {

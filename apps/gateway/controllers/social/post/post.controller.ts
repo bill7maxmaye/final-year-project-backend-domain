@@ -35,6 +35,7 @@ import { PostGatewayRto } from '@app/common//rto/gateway/social/post/post-gatewa
 import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 import { PostReportRto } from '@app/common//rto/social/post/post-report.rto';
 import { PostService } from './post.service';
+import { PostGiftDto } from '@app/common//dto/gateway/post-gift.dto';
 
 @Controller('social')
 @UseGuards(JwtAuthGuard)
@@ -61,6 +62,13 @@ export class PostController {
       this.logger.error('Error getting collection stats:', error);
       throw error;
     }
+  }
+
+  @Post('posts/gift')
+  getPostGift(@Body() body: PostGiftDto): string {
+    this.logger.log('Received gift request:', body);
+    console.log('Gift request body:', body);
+    return `This is a gift from the post controller! ${JSON.stringify(body)}`;
   }
 
   @Post('posts')
