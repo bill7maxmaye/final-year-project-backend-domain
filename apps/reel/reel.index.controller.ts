@@ -726,7 +726,9 @@ export class ReelController {
     }
   }
 
-  @MessagePattern(`${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.COUNT_REPORTS}`)
+  @MessagePattern(
+    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.COUNT_REPORTS}`,
+  )
   async countReelReports(): Promise<number> {
     try {
       return await this.reelService.countReports();
