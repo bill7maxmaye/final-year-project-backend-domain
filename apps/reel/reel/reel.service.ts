@@ -11,6 +11,7 @@ import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moder
 import { ReelAnalyticsDto } from '@app/common//dto/microservices/reel/reel-analytics.dto';
 import { Logger } from '@nestjs/common';
 import { ReportsRepository } from '../report/report.repository';
+import { LikeRepository } from '../like/like.repository';
 // import { ReportRepository } from '@app/common//repositories/report/report.repository';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class ReelService {
   constructor(
     private readonly reelRepository: ReelsRepository,
     private readonly reportRepository: ReportsRepository,
+    private readonly likeRepository: LikeRepository,
   ) {}
 
   async createReel(createReelDto: CreateReelDto): Promise<Reel> {
@@ -402,9 +404,12 @@ export class ReelService {
   async getLikedReelsAnalytics(userId: string): Promise<ReelAnalyticsDto> {
     try {
       // Get all reels liked by the user
-      const likedReels = await this.reelRepository.find({
-        'likes.userId': new Types.ObjectId(userId),
+      const likedReels = await this.likeRepository.find({
+        userId: new Types.ObjectId(userId),
+        onModel: 'Reel', // Add a filter to ensure we only get likes for Reels
       });
+
+      console.log(likedReels, userId);
 
       if (!likedReels || likedReels.length === 0) {
         return {
@@ -413,16 +418,35 @@ export class ReelService {
         };
       }
 
+      // Extract targetIds from the likedReels
+      const reelIds = likedReels.map((like) => like.targetId);
+
+      // Fetch Reels based on targetIds
+      const reels = await this.reelRepository.find({
+        _id: { $in: reelIds },
+      });
+
+      if (!reels || reels.length === 0) {
+        return {
+          totalReels: 0,
+          labelAnalytics: [],
+        };
+      }
+
       // Count labels
       const labelCounts = new Map<string, number>();
-      likedReels.forEach((reel) => {
-        if (reel.label) {
-          labelCounts.set(reel.label, (labelCounts.get(reel.label) || 0) + 1);
+      reels.forEach((reel) => {
+        if (reel.transcription_label) {
+          // Corrected from reel.label
+          labelCounts.set(
+            reel.transcription_label,
+            (labelCounts.get(reel.transcription_label) || 0) + 1,
+          );
         }
       });
 
       // Calculate percentages and create analytics
-      const totalReels = likedReels.length;
+      const totalReels = reels.length; // Use the actual number of Reels found
       const labelAnalytics = Array.from(labelCounts.entries()).map(
         ([label, count]) => ({
           label,

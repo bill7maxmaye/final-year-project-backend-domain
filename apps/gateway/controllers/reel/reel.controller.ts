@@ -372,6 +372,7 @@ export class ReelController {
     @Query('page') page: string,
     @Query('limit') limit: string,
   ): Promise<ReelGatewayRto[]> {
+    console.log('Hello');
     const parsedPage = parseInt(page, 10);
     const parsedLimit = parseInt(limit, 10);
 
@@ -770,20 +771,20 @@ export class ReelController {
 
   @Get('analytics/liked')
   async getLikedReelsAnalytics(
-    @ActiveUser() user: User,
+    @Query('userId') userId: string,
   ): Promise<ReelAnalyticsDto> {
-    this.logger.log(`Getting liked reels analytics for user ${user.id}`);
+    this.logger.log(`Getting liked reels analytics for user ${userId}`);
 
     try {
       const analytics = await this.networking.send<ReelAnalyticsDto>(
         `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_LIKED_REELS_ANALYTICS}`,
-        user.id,
+        userId,
       );
 
       return analytics;
     } catch (error) {
       this.logger.error(
-        `Error getting liked reels analytics for user ${user.id}:`,
+        `Error getting liked reels analytics for user ${userId}:`,
         error,
       );
       throw new HttpException(
