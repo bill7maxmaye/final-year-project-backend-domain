@@ -798,8 +798,8 @@ export class ReelController {
   async getReelsByUserId(
     @ActiveUser() user: User,
     @Param('userId') userId: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '1',
   ): Promise<ReelGatewayRto[]> {
     const parsedPage = parseInt(page, 10);
     const parsedLimit = parseInt(limit, 10);
