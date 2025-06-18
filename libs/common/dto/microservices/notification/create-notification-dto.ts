@@ -76,7 +76,7 @@ export class CreateNotificationDto {
   ): CreateNotificationDto {
     return new CreateNotificationDto(
       receiverId,
-      `Your comment was removed from ${content}.`,
+      content,
       NotificationType.COMMENT_REMOVED,
       false,
       [postId],
