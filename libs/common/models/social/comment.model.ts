@@ -36,6 +36,12 @@ export class PostCommentDocument extends BaseDocument {
 
   @Prop({ type: [MongooseSchema.Types.ObjectId], default: [] })
   mentions: string[];
+
+  @Prop({ type: String, default: 'free' })
+  lable: string;
+
+  @Prop({ type: Number, default: 100 })
+  score: number;
 }
 
 export const PostCommentSchema =

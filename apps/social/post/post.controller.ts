@@ -10,6 +10,8 @@ import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.
 import { FindResult } from '@app/common//rto/find-result';
 import { PostReportDto } from '@app/common//dto/gateway/social/post/post-report.dto';
 import { PostReportRto } from '@app/common//rto/social/post/post-report.rto';
+import { SuccessRto } from '@app/common//rto/success.rto';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 
 @Controller()
 export class PostController {
@@ -252,6 +254,24 @@ export class PostController {
       return await this.service.countDocuments();
     } catch (error) {
       this.logger.error('Error counting post reports:', error);
+      throw error;
+    }
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.MODERATION_RESULT}`,
+  )
+  async handlePostModerationResult(
+    @Payload() payload: { postid: string; moderation: ModerationDto },
+  ): Promise<SuccessRto> {
+    console.log(JSON.stringify(payload));
+    try {
+      await this.service.moderationResult(payload.postid, payload.moderation);
+      return new SuccessRto();
+    } catch (error) {
+      this.logger.error(
+        `Error reel moderation result ${payload.postid}: ${error}`,
+      );
       throw error;
     }
   }
