@@ -793,4 +793,47 @@ export class ReelController {
       );
     }
   }
+
+  @Get('user/:userId')
+  async getReelsByUserId(
+    @ActiveUser() user: User,
+    @Param('userId') userId: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ): Promise<ReelGatewayRto[]> {
+    const parsedPage = parseInt(page, 10);
+    const parsedLimit = parseInt(limit, 10);
+
+    if (
+      isNaN(parsedPage) ||
+      isNaN(parsedLimit) ||
+      parsedPage < 1 ||
+      parsedLimit < 1
+    ) {
+      throw new HttpException(
+        'Invalid pagination parameters. Page and limit must be positive integers.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const paginationOptions: PaginationOptions = {
+      page: parsedPage,
+      limit: parsedLimit,
+    };
+
+    this.logger.log(
+      `Received request to get reels for user ${userId} with pagination: page=${paginationOptions.page}, limit=${paginationOptions.limit}`,
+    );
+
+    const reels = await this.networking.send<ReelRto[]>(
+      `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_BY_USER_ID}`,
+      {
+        userId,
+        paginationOptions,
+        userid: user.id,
+      },
+    );
+
+    return this.reelService.populateReelList(reels);
+  }
 }
