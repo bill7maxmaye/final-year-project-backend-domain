@@ -123,7 +123,12 @@ describe('ReelController', () => {
       mockReelService.populateReelList.mockResolvedValue(mockPopulatedReels);
 
       // Call the controller method
-      const result = await controller.getReelsByUserId(mockUser, 'user123', '1', '10');
+      const result = await controller.getReelsByUserId(
+        mockUser,
+        'user123',
+        '1',
+        '10',
+      );
 
       // Verify the result
       expect(result).toEqual(mockPopulatedReels);
@@ -145,14 +150,18 @@ describe('ReelController', () => {
       const mockUser = { id: 'user123' } as User;
 
       // Test with invalid page
-      await expect(controller.getReelsByUserId(mockUser, 'user123', '0', '10')).rejects.toThrow(
+      await expect(
+        controller.getReelsByUserId(mockUser, 'user123', '0', '10'),
+      ).rejects.toThrow(
         'Invalid pagination parameters. Page and limit must be positive integers.',
       );
 
       // Test with invalid limit
-      await expect(controller.getReelsByUserId(mockUser, 'user123', '1', '0')).rejects.toThrow(
+      await expect(
+        controller.getReelsByUserId(mockUser, 'user123', '1', '0'),
+      ).rejects.toThrow(
         'Invalid pagination parameters. Page and limit must be positive integers.',
       );
     });
   });
-}); 
+});

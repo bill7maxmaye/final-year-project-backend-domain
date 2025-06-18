@@ -52,6 +52,8 @@ import { RecommendedReelDto } from '@app/common//dto/microservices/reel/recommen
 import { AxiosError } from 'axios';
 import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 import { ReelAnalyticsDto } from '@app/common//dto/microservices/reel/reel-analytics.dto';
+import { CreateNotificationDto } from '@app/common//dto/microservices/notification/create-notification-dto';
+import { Types } from 'mongoose';
 
 export class PredictionDto {
   label: string;
@@ -114,7 +116,12 @@ export class ReelController {
         reel,
       );
 
-      void this.analyzeVideoAndSendUpdate(response.id, file);
+      void this.analyzeVideoAndSendUpdate(
+        response.id,
+        file,
+        response.ownerId,
+        response.description,
+      );
 
       return {
         message: 'Reel Created successfully',
@@ -161,6 +168,8 @@ export class ReelController {
   private async moderateTranscription(
     reelId: string,
     transcription: string,
+    ownerId: string,
+    description: string,
   ): Promise<void> {
     try {
       const moderationResult = await firstValueFrom(
@@ -194,6 +203,18 @@ export class ReelController {
             { reelId: reelId, moderation: moderationDto },
           );
         } else if (prediction.label === 'hate' && prediction.score >= 0.8) {
+          const createNotificationDto =
+            CreateNotificationDto.fromCommentRemoved(
+              new Types.ObjectId(ownerId),
+              new Types.ObjectId(reelId),
+              description,
+            );
+
+          this.networking.emit(
+            `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
+            createNotificationDto,
+          );
+
           await this.networking.send(
             `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.DELETE}`,
             reelId,
@@ -211,6 +232,8 @@ export class ReelController {
   private async analyzeVideoAndSendUpdate(
     reelId: string,
     file: Express.Multer.File,
+    ownerId: string,
+    description: string,
   ): Promise<void> {
     try {
       const formData = new FormData();
@@ -256,6 +279,8 @@ export class ReelController {
         void this.moderateTranscription(
           reelId,
           updateReelGatewayDto.transcription_text,
+          ownerId,
+          description,
         );
       }
 

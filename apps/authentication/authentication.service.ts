@@ -13,7 +13,12 @@ import {
   UserStatus,
 } from '@app/common//models/authentication/user.model';
 import { LoginResponse } from '@app/common//rto/microservices/auth/login-response.rto';
-import { HttpStatus, Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';

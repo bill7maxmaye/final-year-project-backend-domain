@@ -15,6 +15,9 @@ export class ReelAnalyticsDto {
   @ApiProperty({ description: 'Total number of liked reels analyzed' })
   totalReels: number;
 
-  @ApiProperty({ description: 'Array of label analytics', type: [LabelAnalyticsDto] })
+  @ApiProperty({
+    description: 'Array of label analytics',
+    type: [LabelAnalyticsDto],
+  })
   labelAnalytics: LabelAnalyticsDto[];
-} 
+}

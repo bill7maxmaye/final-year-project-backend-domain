@@ -165,7 +165,9 @@ export class CommentController {
     }
   }
 
-  @MessagePattern(`${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.COUNT}`)
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.COUNT}`,
+  )
   async countComments(): Promise<number> {
     try {
       return await this.service.countDocuments();

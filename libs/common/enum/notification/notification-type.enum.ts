@@ -12,4 +12,5 @@ export enum NotificationType {
   COMMENT_REMOVED = 'comment-removed',
   POST_REMOVED = 'post-removed',
   REEL_REMOVED = 'reel-removed',
+  GIFT = 'gift',
 }
