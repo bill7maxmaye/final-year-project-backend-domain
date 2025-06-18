@@ -16,15 +16,15 @@ import { LoginResponse } from '@app/common//rto/microservices/auth/login-respons
 import {
   HttpStatus,
   Injectable,
-  NotFoundException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { StorageService } from 'apps/gateway/storage/storage.service';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { EmailService } from './email.service';
-import { StorageService } from 'apps/gateway/storage/storage.service';
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthenticationService {
@@ -183,7 +183,7 @@ export class AuthenticationService {
     const payload = { userId: user._id, email: user.email, role: user.role };
     const jwtSecret = this.configService.get<string>('JWT_SECRET');
 
-    const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '10h' });
+    const accessToken = jwt.sign(payload, jwtSecret, { expiresIn: '300h' });
 
     return new LoginResponse(accessToken, user._id.toString());
     // } catch {
