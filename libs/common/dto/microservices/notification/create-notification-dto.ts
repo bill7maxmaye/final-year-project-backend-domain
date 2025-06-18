@@ -26,6 +26,21 @@ export class CreateNotificationDto {
     );
   }
 
+  static fromGift(
+    receiverId: Types.ObjectId,
+    senderId: Types.ObjectId,
+    amount: string,
+  ): CreateNotificationDto {
+    return new CreateNotificationDto(
+      receiverId,
+      amount,
+      NotificationType.GIFT,
+      false,
+      [],
+      [senderId],
+    );
+  }
+
   static fromPostRemoved(
     receiverId: Types.ObjectId,
     postId: Types.ObjectId,
@@ -53,6 +68,7 @@ export class CreateNotificationDto {
       [postId],
     );
   }
+
   static fromCommentRemoved(
     receiverId: Types.ObjectId,
     postId: Types.ObjectId,

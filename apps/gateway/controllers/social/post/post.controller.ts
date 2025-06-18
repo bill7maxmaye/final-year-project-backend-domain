@@ -36,6 +36,8 @@ import { UserRto } from '@app/common//rto/microservices/auth/user.rto';
 import { PostReportRto } from '@app/common//rto/social/post/post-report.rto';
 import { PostService } from './post.service';
 import { PostGiftDto } from '@app/common//dto/gateway/post-gift.dto';
+import { CreateNotificationDto } from '@app/common//dto/microservices/notification/create-notification-dto';
+import { Types } from 'mongoose';
 
 @Controller('social')
 @UseGuards(JwtAuthGuard)
@@ -67,8 +69,25 @@ export class PostController {
   @Post('posts/gift')
   getPostGift(@Body() body: PostGiftDto): string {
     this.logger.log('Received gift request:', body);
-    console.log('Gift request body:', body);
-    return `This is a gift from the post controller! ${JSON.stringify(body)}`;
+    try {
+      console.log('Gift request body:', body);
+
+      const createNotificationDto =
+        CreateNotificationDto.fromGift(
+          new Types.ObjectId(body.recipientId),
+          new Types.ObjectId(body.senderId),
+          body.star!.toString(),
+        );
+
+      this.networking.emit(
+        `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
+        createNotificationDto,
+      );
+      return `This is a gift from the post controller! ${JSON.stringify(body)}`;
+    } catch (error) {
+      this.logger.error('Error getting post gift:', error);
+      throw error;
+    }
   }
 
   @Post('posts')
