@@ -19,7 +19,7 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  await app.listen(process.env.port ?? 3001);
+  await app.listen(3001);
   console.log(
     '🚀 Authentication Microservice is running on http://localhost:3001',
   );
