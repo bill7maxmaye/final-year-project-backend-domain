@@ -737,4 +737,75 @@ export class ReelController {
       throw error;
     }
   }
+
+  @MessagePattern(
+    `${MICROSERVICE.REELS}.${CONTROLLER.REELS}.${ACTION.GET_BY_USER_ID}`,
+  )
+  async handleGetReelsByUserId(
+    @Payload()
+    payload: {
+      userId: string;
+      paginationOptions: PaginationOptions;
+      userid?: string | null;
+    },
+  ): Promise<ReelRto[]> {
+    this.logger.log(
+      `Handling get reels by user ID ${payload.userId} with pagination: page=${payload.paginationOptions.page}, limit=${payload.paginationOptions.limit}`,
+    );
+
+    // 1. Fetch the reels using the ReelService
+    const reels = await this.reelService.getReelsByUserId(
+      payload.userId,
+      payload.paginationOptions,
+    );
+
+    // If no reels are found, return an empty array immediately
+    if (!reels || reels.length === 0) {
+      this.logger.log(`No reels found for user ${payload.userId}.`);
+      return [];
+    }
+
+    // 2. Extract the IDs of the fetched reels and put them in a Set
+    const reelIdSet = new Set<string>(reels.map((reel) => reel.id));
+    this.logger.log(
+      `Fetched ${reels.length} reels for user ${payload.userId}. Extracted IDs: ${Array.from(reelIdSet).join(', ')}`,
+    );
+
+    // 3. Initialize a variable for liked reel IDs set
+    let likedReelIds: Set<string> | null = null;
+
+    // 4. If a userId is provided, query the LikeService
+    if (payload.userid) {
+      this.logger.log(
+        `User ${payload.userid} is logged in. Checking liked reels...`,
+      );
+      try {
+        likedReelIds = await this.likeService.findLikedTargetIds(
+          payload.userid,
+          reelIdSet,
+          LikeableType.REEL,
+        );
+        this.logger.log(
+          `Found ${likedReelIds.size} liked reels for user ${payload.userid} among the fetched ones.`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Error fetching liked reel IDs for user ${payload.userid}:`,
+          error,
+        );
+        likedReelIds = new Set(); // Fallback to empty set on error
+      }
+    } else {
+      this.logger.log(
+        'User ID not provided. Returning reels without like status for current user.',
+      );
+    }
+
+    // 5. Map the fetched Reel entities to ReelRto
+    const reelRtos = ReelRto.fromEntities(reels, likedReelIds);
+    this.logger.log(`Mapped ${reelRtos.length} reels to RTOs.`);
+
+    // 6. Return the resulting ReelRto array
+    return reelRtos;
+  }
 }

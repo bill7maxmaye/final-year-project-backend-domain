@@ -482,4 +482,33 @@ export class ReelService {
       throw error;
     }
   }
+
+  async getReelsByUserId(
+    userId: string,
+    paginationOptions: PaginationOptions,
+  ): Promise<Reel[]> {
+    const { page, limit } = paginationOptions;
+    const skip = (page - 1) * limit;
+
+    try {
+      const filterQuery: FilterQuery<Reel> = {
+        ownerId: new Types.ObjectId(userId),
+      };
+
+      const reels = await this.reelRepository
+        .find(filterQuery)
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 })
+        .exec();
+
+      return Reel.fromDocuments(reels);
+    } catch (error: any) {
+      if (error instanceof Types.ObjectId) {
+        throw new NotFoundException(`Invalid User ID "${userId}"`);
+      }
+      console.error('Error fetching reels by user ID:', error);
+      throw error;
+    }
+  }
 }
