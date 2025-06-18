@@ -12,8 +12,9 @@ import { PostDocument } from '@app/common//models/social/post.model';
 import { FindResult } from '@app/common//rto/find-result';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { NetworkingService } from '@pp/networking';
-import { FilterQuery, Types } from 'mongoose';
+import { FilterQuery, Types, UpdateQuery } from 'mongoose';
 import { Logger } from '@nestjs/common';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 
 @Injectable()
 export class PostService {
@@ -387,6 +388,34 @@ export class PostService {
       return await this.postReportRepository.countDocuments();
     } catch (error) {
       this.logger.error('Error counting post reports:', error);
+      throw error;
+    }
+  }
+
+  async moderationResult(
+    id: string,
+    moderationDto: ModerationDto,
+  ): Promise<PostDocument> {
+    try {
+      const updateObject: UpdateQuery<PostDocument> = {
+        $set: {
+          label: moderationDto.label,
+          score: moderationDto.score,
+        },
+      };
+
+      console.log('Update Object here:', id, updateObject);
+
+      const updatedPost = await this.postRepository.updateOneAndRetrieve(
+        { _id: new Types.ObjectId(id) },
+        updateObject,
+      );
+
+      return updatedPost;
+    } catch (error: any) {
+      if (error) {
+        throw new NotFoundException(`Invalid Reel ID format "${id}"`);
+      }
       throw error;
     }
   }

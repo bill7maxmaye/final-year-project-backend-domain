@@ -87,90 +87,96 @@ export class CommentController {
 
     console.log('Response:', response);
 
+    void this.moderateComment(
+      response.id,
+      response.content,
+      response.authorId!,
+    );
+
     return result;
   }
 
-  // private async moderateComment(
-  //   commentId: string,
-  //   content: string,
-  //   ownerId: string,
-  // ): Promise<void> {
-  //   try {
-  //     console.log('Am here');
-  //     const moderationResult = await firstValueFrom(
-  //       this.httpService
-  //         .post('http://localhost:8001/predict', { post: content })
-  //         .pipe(
-  //           catchError((error: AxiosError) => {
-  //             this.logger.error(
-  //               `Error during moderation: ${error.message}`,
-  //               error.stack,
-  //             );
-  //             return [];
-  //           }),
-  //         ),
-  //     );
+  private async moderateComment(
+    commentId: string,
+    content: string,
+    ownerId: string,
+  ): Promise<void> {
+    try {
+      console.log('Am here');
+      const moderationResult = await firstValueFrom(
+        this.httpService
+          .post('http://localhost:8001/predict', { post: content })
+          .pipe(
+            catchError((error: AxiosError) => {
+              this.logger.error(
+                `Error during moderation: ${error.message}`,
+                error.stack,
+              );
+              return [];
+            }),
+          ),
+      );
 
-  //     console.log(JSON.stringify(moderationResult.data));
+      console.log(JSON.stringify(moderationResult.data));
 
-  //     if (!moderationResult || !moderationResult.data) {
-  //       this.logger.warn(
-  //         `No moderation predictions received for comment ${commentId}. Skipping moderation actions.`,
-  //       );
-  //       return; // Exit if there are problems with the response.
-  //     }
+      if (!moderationResult || !moderationResult.data) {
+        this.logger.warn(
+          `No moderation predictions received for comment ${commentId}. Skipping moderation actions.`,
+        );
+        return; // Exit if there are problems with the response.
+      }
 
-  //     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-  //     const prediction: PredictionDto = moderationResult.data.predictions[0];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const prediction: PredictionDto = moderationResult.data.predictions[0];
 
-  //     if (prediction.label === 'free') {
-  //       const moderationDto = ModerationDto.fromGateway(
-  //         prediction.label,
-  //         prediction.score,
-  //       );
+      if (prediction.label === 'free') {
+        const moderationDto = ModerationDto.fromGateway(
+          prediction.label,
+          prediction.score,
+        );
 
-  //       await this.networking.send(
-  //         `${MICROSERVICE.REELS}.${CONTROLLER.REEL_COMMENTS}.${ACTION.COMMENT_MODERATION_RESULT}`,
-  //         { commentId: commentId, moderation: moderationDto },
-  //       );
-  //     } else if (prediction.label === 'hate' && prediction.score >= 0.8) {
-  //       try {
-  //         const createNotificationDto =
-  //           CreateNotificationDto.fromCommentRemoved(
-  //             new Types.ObjectId(ownerId),
-  //             new Types.ObjectId(commentId),
-  //             content,
-  //           );
+        await this.networking.send(
+          `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.COMMENT_MODERATION_RESULT}`,
+          { commentId: commentId, moderation: moderationDto },
+        );
+      } else if (prediction.label === 'hate' && prediction.score >= 0.8) {
+        try {
+          const createNotificationDto =
+            CreateNotificationDto.fromCommentRemoved(
+              new Types.ObjectId(ownerId),
+              new Types.ObjectId(commentId),
+              content,
+            );
 
-  //         this.networking.emit(
-  //           `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
-  //           createNotificationDto,
-  //         );
+          this.networking.emit(
+            `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
+            createNotificationDto,
+          );
 
-  //         await this.networking.send<DeleteCommentResponseRto>(
-  //           `${MICROSERVICE.REELS}.${CONTROLLER.REEL_COMMENTS}.${ACTION.DELETE}`,
-  //           { id: commentId },
-  //         );
-  //         this.logger.log(`Deleted comment ${commentId} due to hate speech.`);
-  //       } catch (err) {
-  //         this.logger.error(
-  //           `Error deleting comment ${commentId} after moderation: ${err}`,
-  //           err,
-  //         );
-  //       }
-  //     } else {
-  //       // Handle other cases (e.g., neutral, or hate with score < 0.8).  You may want to log these.
-  //       this.logger.log(
-  //         `Comment moderation result is ${prediction.label} with score ${prediction.score}. No action taken.`,
-  //       );
-  //     }
-  //   } catch (error) {
-  //     this.logger.error(
-  //       `Error during comment moderation for comment ${commentId}:`,
-  //       error,
-  //     );
-  //   }
-  // }
+          await this.networking.send<{ success: boolean }>(
+            `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.DELETE}`,
+            { id: commentId },
+          );
+          this.logger.log(`Deleted comment ${commentId} due to hate speech.`);
+        } catch (err) {
+          this.logger.error(
+            `Error deleting comment ${commentId} after moderation: ${err}`,
+            err,
+          );
+        }
+      } else {
+        // Handle other cases (e.g., neutral, or hate with score < 0.8).  You may want to log these.
+        this.logger.log(
+          `Comment moderation result is ${prediction.label} with score ${prediction.score}. No action taken.`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error during comment moderation for comment ${commentId}:`,
+        error,
+      );
+    }
+  }
 
   @Patch('comments/:id')
   @UseInterceptors(FilesInterceptor('files'))

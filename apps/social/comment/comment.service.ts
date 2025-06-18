@@ -1,14 +1,15 @@
 import { MicroserviceErrorCode, MicroserviceException } from '@app/common';
 import { PostCommentRepository } from '@app/common//baseRepository/social/post-repositories/post-comment.repository';
 import { PostRepository } from '@app/common//baseRepository/social/post-repositories/post.repository';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 import { CreateCommentDto } from '@app/common//dto/microservices/social/post/create-comment-dto';
 import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
 import { ErrorMessage } from '@app/common//enum/authentication/error-message.enum';
-import { CommentDocument } from '@app/common//models/reel/comment.model';
 import { PostCommentDocument } from '@app/common//models/social/comment.model';
 import { FindResult } from '@app/common//rto/find-result';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
+import { Types, UpdateQuery } from 'mongoose';
 
 @Injectable()
 export class CommentService {
@@ -215,6 +216,7 @@ export class CommentService {
     const filter: any = {};
 
     if (query.search) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       filter.$or = [
         { content: { $regex: query.search, $options: 'i' } },
         { title: { $regex: query.search, $options: 'i' } },
@@ -251,6 +253,34 @@ export class CommentService {
       return await this.commentRepository.countDocuments();
     } catch (error) {
       this.logger.error('Error counting comments:', error);
+      throw error;
+    }
+  }
+
+  async moderationResult(
+    id: string,
+    moderationDto: ModerationDto,
+  ): Promise<PostCommentDocument> {
+    try {
+      const updateObject: UpdateQuery<PostCommentDocument> = {
+        $set: {
+          label: moderationDto.label,
+          score: moderationDto.score,
+        },
+      };
+
+      console.log('Update Object here:', id, updateObject);
+
+      const updatedComment = await this.commentRepository.updateOneAndRetrieve(
+        { _id: new Types.ObjectId(id) },
+        updateObject,
+      );
+
+      return updatedComment;
+    } catch (error: any) {
+      if (error) {
+        throw new NotFoundException(`Invalid Reel ID format "${id}"`);
+      }
       throw error;
     }
   }

@@ -38,6 +38,11 @@ import { PostService } from './post.service';
 import { PostGiftDto } from '@app/common//dto/gateway/post-gift.dto';
 import { CreateNotificationDto } from '@app/common//dto/microservices/notification/create-notification-dto';
 import { Types } from 'mongoose';
+import { catchError, firstValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios/dist/http.service';
+import { AxiosError } from 'axios';
+import { PredictionDto } from '../../reel/reel.controller';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
 
 @Controller('social')
 @UseGuards(JwtAuthGuard)
@@ -48,6 +53,7 @@ export class PostController {
     private readonly networking: NetworkingService,
     private readonly storageService: StorageService,
     private readonly postService: PostService,
+    private readonly httpService: HttpService,
   ) {}
 
   @Get('test')
@@ -72,12 +78,11 @@ export class PostController {
     try {
       console.log('Gift request body:', body);
 
-      const createNotificationDto =
-        CreateNotificationDto.fromGift(
-          new Types.ObjectId(body.recipientId),
-          new Types.ObjectId(body.senderId),
-          body.star!.toString(),
-        );
+      const createNotificationDto = CreateNotificationDto.fromGift(
+        new Types.ObjectId(body.recipientId),
+        new Types.ObjectId(body.senderId),
+        body.star!.toString(),
+      );
 
       this.networking.emit(
         `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
@@ -87,6 +92,86 @@ export class PostController {
     } catch (error) {
       this.logger.error('Error getting post gift:', error);
       throw error;
+    }
+  }
+
+  private async moderatePost(
+    postid: string,
+    content: string,
+    ownerId: string,
+  ): Promise<void> {
+    try {
+      console.log('Am here');
+      const moderationResult = await firstValueFrom(
+        this.httpService
+          .post('http://localhost:8001/predict', { post: content })
+          .pipe(
+            catchError((error: AxiosError) => {
+              this.logger.error(
+                `Error during moderation: ${error.message}`,
+                error.stack,
+              );
+              return [];
+            }),
+          ),
+      );
+
+      console.log(JSON.stringify(moderationResult.data));
+
+      if (!moderationResult || !moderationResult.data) {
+        this.logger.warn(
+          `No moderation predictions received for comment ${postid}. Skipping moderation actions.`,
+        );
+        return;
+      }
+
+      const prediction: PredictionDto = moderationResult.data.predictions[0];
+
+      if (prediction.label === 'free') {
+        const moderationDto = ModerationDto.fromGateway(
+          prediction.label,
+          prediction.score,
+        );
+
+        await this.networking.send(
+          `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.MODERATION_RESULT}`,
+          { postId: postid, moderation: moderationDto },
+        );
+      } else if (prediction.label === 'hate' && prediction.score >= 0.8) {
+        try {
+          const createNotificationDto = CreateNotificationDto.fromPostRemoved(
+            new Types.ObjectId(ownerId),
+            new Types.ObjectId(postid),
+            content,
+          );
+
+          this.networking.emit(
+            `${MICROSERVICE.NOTIFICATION}.${CONTROLLER.NOTIFICATIONS}.${ACTION.CREATE}`,
+            createNotificationDto,
+          );
+
+          await this.networking.send<{ success: boolean }>(
+            `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_POSTS}.${ACTION.DELETE}`,
+            { id: postid },
+          );
+          this.logger.log(`Deleted post ${postid} due to hate speech.`);
+        } catch (err) {
+          this.logger.error(
+            `Error deleting post ${postid} after moderation: ${err}`,
+            err,
+          );
+        }
+      } else {
+        // Handle other cases (e.g., neutral, or hate with score < 0.8).  You may want to log these.
+        this.logger.log(
+          `post moderation result is ${prediction.label} with score ${prediction.score}. No action taken.`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error during comment moderation for comment ${postid}:`,
+        error,
+      );
     }
   }
 
@@ -117,6 +202,8 @@ export class PostController {
 
     console.log('owner', owner);
     const result = PostGatewayRto.fromEntity(response, owner);
+
+    void this.moderatePost(response.id, response.content, response.authorId);
 
     return result;
   }

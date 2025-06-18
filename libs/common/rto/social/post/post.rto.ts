@@ -9,6 +9,8 @@ export class PostRto {
     public commentIds: string[],
     public likedBy: string[],
     public reportCount: number = 0,
+    public score: number,
+    public label: string,
     public createdAt: Date,
     public updatedAt: Date,
   ) {}
@@ -22,6 +24,8 @@ export class PostRto {
       entity.commentIds ?? [],
       entity.likedBy ?? [],
       entity.reportCount ?? 0,
+      entity.score,
+      entity.label,
       entity.createdAt,
       entity.updatedAt,
     );

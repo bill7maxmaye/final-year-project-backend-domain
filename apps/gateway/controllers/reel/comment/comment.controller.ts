@@ -83,6 +83,7 @@ export class CommentController {
         createCommentDto.content,
         response.ownerId,
       );
+
       return this.reelService.populate(authorDetails, response);
     } catch (error) {
       this.logger.error('Error during create:', error);

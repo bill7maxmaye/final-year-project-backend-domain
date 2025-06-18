@@ -8,6 +8,8 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CommentRto } from '@app/common//rto/social/comment/comment.rto';
 import { ListAllDto } from '@app/common//dto/microservices/social/post/list-all.dto';
 import { FindResult } from '@app/common//rto/find-result';
+import { ModerationDto } from '@app/common//dto/microservices/reel/comment-moderation.dto';
+import { SuccessRto } from '@app/common//rto/success.rto';
 
 @Controller()
 export class CommentController {
@@ -173,6 +175,27 @@ export class CommentController {
       return await this.service.countDocuments();
     } catch (error) {
       this.logger.error('Error counting comments:', error);
+      throw error;
+    }
+  }
+
+  @MessagePattern(
+    `${MICROSERVICE.SOCIAL}.${CONTROLLER.SOCIAL_COMMENTS}.${ACTION.COMMENT_MODERATION_RESULT}`,
+  )
+  async handleCommentModerationResult(
+    @Payload() payload: { commentId: string; moderation: ModerationDto },
+  ): Promise<SuccessRto> {
+    console.log(JSON.stringify(payload));
+    try {
+      await this.service.moderationResult(
+        payload.commentId,
+        payload.moderation,
+      );
+      return new SuccessRto();
+    } catch (error) {
+      this.logger.error(
+        `Error reel moderation result ${payload.commentId}: ${error}`,
+      );
       throw error;
     }
   }
